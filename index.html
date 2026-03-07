@@ -1,1181 +1,365 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>HyperEDT – Console Admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    :root {
-      --bg: #020617;
-      --bg-soft: #020617;
-      --bg-elevated: #020617;
-      --border: #1f2937;
-      --primary: #2563eb;
-      --primary-soft: #1d4ed8;
-      --accent: #22c55e;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --text: #e5e7eb;
-      --muted: #9ca3af;
-      --radius: 10px;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
-        "Segoe UI", sans-serif;
-    }
-
-    body {
-      background: radial-gradient(circle at top, #0b1120 0, #020617 55%);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-    }
-
-    /* Layout */
-    .sidebar {
-      width: 270px;
-      background: linear-gradient(180deg, #020617, #020617f0 60%, #020617);
-      border-right: 1px solid var(--border);
-      padding: 18px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .logo-icon {
-      width: 34px;
-      height: 34px;
-      border-radius: 999px;
-      background: radial-gradient(circle at 30% 0, #60a5fa, #1d4ed8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 700;
-      font-size: 18px;
-      box-shadow: 0 0 18px rgba(37, 99, 235, 0.6);
-    }
-
-    .logo-text {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .logo-text span:first-child {
-      font-weight: 600;
-      letter-spacing: 0.03em;
-    }
-
-    .logo-text span:last-child {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .admin-card {
-      background: radial-gradient(circle at top left, #1d4ed8 0, #020617 55%);
-      border-radius: var(--radius);
-      padding: 12px 12px 10px;
-      border: 1px solid rgba(37, 99, 235, 0.5);
-      box-shadow: 0 0 25px rgba(37, 99, 235, 0.35);
-      font-size: 12px;
-    }
-
-    .admin-card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-
-    .admin-name {
-      font-weight: 600;
-      font-size: 13px;
-    }
-
-    .admin-role {
-      font-size: 11px;
-      color: #bfdbfe;
-    }
-
-    .admin-badge {
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid rgba(191, 219, 254, 0.4);
-      color: #bfdbfe;
-    }
-
-    .admin-footer {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: #dbeafe;
-      opacity: 0.9;
-    }
-
-    .nav-section-title {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-
-    .nav-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 9px;
-      border-radius: 8px;
-      font-size: 13px;
-      color: var(--muted);
-      cursor: pointer;
-      transition: 0.15s ease;
-    }
-
-    .nav-item span.icon {
-      width: 20px;
-      text-align: center;
-      font-size: 15px;
-    }
-
-    .nav-item.active {
-      background: rgba(37, 99, 235, 0.18);
-      color: #e5e7eb;
-      border: 1px solid rgba(37, 99, 235, 0.6);
-      box-shadow: 0 0 12px rgba(37, 99, 235, 0.4);
-    }
-
-    .nav-item:hover:not(.active) {
-      background: rgba(15, 23, 42, 0.9);
-      color: #e5e7eb;
-    }
-
-    .nav-footer {
-      margin-top: auto;
-      font-size: 11px;
-      color: var(--muted);
-      border-top: 1px solid var(--border);
-      padding-top: 10px;
-    }
-
-    .nav-footer span {
-      display: block;
-    }
-
-    .nav-footer strong {
-      color: #e5e7eb;
-    }
-
-    /* Main */
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      padding: 16px 18px;
-      gap: 14px;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .topbar-left {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .topbar-left h1 {
-      font-size: 20px;
-      font-weight: 600;
-    }
-
-    .topbar-left span {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .topbar-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .pill {
-      font-size: 11px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.9);
-      color: var(--muted);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .pill strong {
-      color: #e5e7eb;
-      font-weight: 500;
-    }
-
-    .btn-primary {
-      padding: 6px 12px;
-      border-radius: 999px;
-      border: none;
-      background: linear-gradient(135deg, var(--primary), var(--primary-soft));
-      color: white;
-      font-size: 12px;
-      font-weight: 500;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      box-shadow: 0 0 16px rgba(37, 99, 235, 0.6);
-    }
-
-    .btn-primary span {
-      font-size: 14px;
-    }
-
-    .btn-ghost {
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.9);
-      color: var(--muted);
-      font-size: 11px;
-      cursor: pointer;
-    }
-
-    .btn-ghost.danger {
-      border-color: rgba(239, 68, 68, 0.6);
-      color: #fecaca;
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 1.4fr 2.2fr;
-      gap: 14px;
-      align-items: flex-start;
-    }
-
-    .card {
-      background: radial-gradient(circle at top left, #020617, #020617f0);
-      border-radius: var(--radius);
-      border: 1px solid var(--border);
-      padding: 12px 12px 10px;
-      box-shadow: 0 0 18px rgba(15, 23, 42, 0.9);
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-
-    .card-title {
-      font-size: 13px;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .card-title span.icon {
-      font-size: 15px;
-    }
-
-    .card-subtitle {
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    .tag {
-      font-size: 10px;
-      padding: 3px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      color: var(--muted);
-    }
-
-    .tag.green {
-      border-color: rgba(34, 197, 94, 0.5);
-      color: #bbf7d0;
-      background: rgba(22, 163, 74, 0.15);
-    }
-
-    .tag.blue {
-      border-color: rgba(59, 130, 246, 0.5);
-      color: #bfdbfe;
-      background: rgba(37, 99, 235, 0.15);
-    }
-
-    .tag.orange {
-      border-color: rgba(245, 158, 11, 0.5);
-      color: #fed7aa;
-      background: rgba(245, 158, 11, 0.15);
-    }
-
-    /* Forms */
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      margin-bottom: 8px;
-      font-size: 11px;
-    }
-
-    .form-group label {
-      color: var(--muted);
-    }
-
-    .form-row {
-      display: flex;
-      gap: 8px;
-    }
-
-    input[type="text"],
-    select {
-      background: rgba(15, 23, 42, 0.9);
-      border-radius: 7px;
-      border: 1px solid var(--border);
-      padding: 5px 7px;
-      color: var(--text);
-      font-size: 11px;
-      width: 100%;
-    }
-
-    input[type="time"] {
-      background: rgba(15, 23, 42, 0.9);
-      border-radius: 7px;
-      border: 1px solid var(--border);
-      padding: 4px 6px;
-      color: var(--text);
-      font-size: 11px;
-      width: 100%;
-    }
-
-    .small-label {
-      font-size: 10px;
-      color: var(--muted);
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-top: 4px;
-    }
-
-    .chip {
-      font-size: 10px;
-      padding: 3px 7px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.9);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .chip span.remove {
-      cursor: pointer;
-      color: #fca5a5;
-      font-size: 11px;
-    }
-
-    /* Timetable */
-    .toolbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      gap: 8px;
-      font-size: 11px;
-    }
-
-    .toolbar-left,
-    .toolbar-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .toolbar select {
-      max-width: 180px;
-    }
-
-    .timetable {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 11px;
-      margin-top: 4px;
-    }
-
-    .timetable th,
-    .timetable td {
-      border: 1px solid #111827;
-      padding: 4px 4px;
-      text-align: center;
-      vertical-align: top;
-      min-width: 90px;
-    }
-
-    .timetable th {
-      background: #020617;
-      color: var(--muted);
-      font-weight: 500;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-
-    .timetable td {
-      background: rgba(15, 23, 42, 0.9);
-      height: 60px;
-      position: relative;
-    }
-
-    .slot {
-      border-radius: 6px;
-      padding: 3px 4px;
-      font-size: 10px;
-      line-height: 1.3;
-      text-align: left;
-      background: rgba(37, 99, 235, 0.18);
-      border: 1px solid rgba(37, 99, 235, 0.6);
-      cursor: pointer;
-    }
-
-    .slot span.line {
-      display: block;
-    }
-
-    .slot span.meta {
-      color: var(--muted);
-      font-size: 9px;
-    }
-
-    .slot.empty {
-      opacity: 0.4;
-      border-style: dashed;
-      text-align: center;
-      padding: 10px 4px;
-      cursor: pointer;
-    }
-
-    .slot.empty span {
-      font-size: 10px;
-      color: var(--muted);
-    }
-
-    .legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 6px;
-      font-size: 10px;
-      color: var(--muted);
-    }
-
-    .legend-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .legend-color {
-      width: 10px;
-      height: 10px;
-      border-radius: 3px;
-      background: rgba(37, 99, 235, 0.7);
-    }
-
-    .legend-color.room {
-      background: rgba(34, 197, 94, 0.7);
-    }
-
-    .legend-color.teacher {
-      background: rgba(245, 158, 11, 0.7);
-    }
-
-    .legend-color.subject {
-      background: rgba(56, 189, 248, 0.7);
-    }
-
-    .footer {
-      margin-top: 4px;
-      font-size: 10px;
-      color: var(--muted);
-      display: flex;
-      justify-content: space-between;
-      opacity: 0.7;
-    }
-
-    @media (max-width: 1100px) {
-      body {
-        flex-direction: column;
-      }
-      .sidebar {
-        width: 100%;
-        flex-direction: row;
-        align-items: center;
-        gap: 16px;
-        overflow-x: auto;
-      }
-      .nav-footer {
-        display: none;
-      }
-      .main {
-        padding: 12px;
-      }
-      .layout {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Centre de contrôle - Gare Montparnasse</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Segoe UI,Arial;
+background:#0f172a;
+color:white;
+display:flex;
+height:100vh;
+}
+
+/* PANEL */
+
+#panel{
+width:350px;
+background:#020617;
+padding:25px;
+box-shadow:0 0 20px black;
+overflow:auto;
+}
+
+#panel h1{
+font-size:22px;
+margin-bottom:20px;
+}
+
+label{
+font-size:13px;
+opacity:0.7;
+}
+
+input,select{
+
+width:100%;
+padding:10px;
+margin-top:5px;
+margin-bottom:15px;
+border:none;
+border-radius:6px;
+background:#1e293b;
+color:white;
+}
+
+button{
+
+width:100%;
+padding:12px;
+background:#3b82f6;
+border:none;
+border-radius:6px;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+button:hover{
+background:#2563eb;
+}
+
+/* DISPLAY */
+
+#display{
+
+flex:1;
+padding:30px;
+}
+
+header{
+
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:25px;
+
+}
+
+header h1{
+
+font-size:30px;
+}
+
+#clock{
+
+font-size:22px;
+color:#38bdf8;
+
+}
+
+table{
+
+width:100%;
+border-collapse:collapse;
+background:#020617;
+border-radius:10px;
+overflow:hidden;
+}
+
+th{
+
+background:#020617;
+padding:15px;
+font-size:14px;
+text-transform:uppercase;
+letter-spacing:1px;
+border-bottom:2px solid #1e293b;
+
+}
+
+td{
+
+padding:15px;
+text-align:center;
+border-bottom:1px solid #1e293b;
+
+}
+
+.status-ok{
+
+color:#22c55e;
+font-weight:bold;
+
+}
+
+.status-delay{
+
+color:#f59e0b;
+font-weight:bold;
+
+}
+
+.status-problem{
+
+color:#ef4444;
+font-weight:bold;
+
+}
+
+.delete{
+
+background:#ef4444;
+padding:6px 10px;
+border-radius:4px;
+cursor:pointer;
+
+}
+
+.delete:hover{
+
+background:#dc2626;
+
+}
+
+</style>
+
 </head>
+
 <body>
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="logo">
-      <div class="logo-icon">E</div>
-      <div class="logo-text">
-        <span>HyperEDT</span>
-        <span>Console admin – Emplois du temps</span>
-      </div>
-    </div>
 
-    <div class="admin-card">
-      <div class="admin-card-header">
-        <div>
-          <div class="admin-name">Gabriel – Super Admin</div>
-          <div class="admin-role">Gestionnaire global des emplois du temps</div>
-        </div>
-        <div class="admin-badge">Mode GOD</div>
-      </div>
-      <div class="admin-footer">
-        <span>Lycée Fictif – Paris</span>
-        <span>Année 2024–2025</span>
-      </div>
-    </div>
+<div id="panel">
 
-    <div>
-      <div class="nav-section-title">Domaines</div>
-      <ul class="nav-list">
-        <li class="nav-item active">
-          <span class="icon">📅</span>
-          <span>Gestion des emplois du temps</span>
-        </li>
-        <li class="nav-item">
-          <span class="icon">🏫</span>
-          <span>Structures (classes, salles, profs)</span>
-        </li>
-        <li class="nav-item">
-          <span class="icon">🧠</span>
-          <span>Règles & contraintes (à venir)</span>
-        </li>
-      </ul>
-    </div>
+<h1>Centre de gestion</h1>
 
-    <div class="nav-footer">
-      <span><strong>HyperEDT</strong> – Prototype fictif ultra‑admin</span>
-      <span>Utilisation : jeu, maquette, sandbox.</span>
-    </div>
-  </aside>
+<label>Numéro du train</label>
+<input id="train">
 
-  <!-- Main -->
-  <main class="main">
-    <header class="topbar">
-      <div class="topbar-left">
-        <h1>Gestionnaire d’emplois du temps</h1>
-        <span>Crée, modifie et visualise les emplois du temps comme si tu gérais tout un établissement.</span>
-      </div>
-      <div class="topbar-right">
-        <div class="pill">
-          🧩 <span>Mode :</span> <strong>Admin complet</strong>
-        </div>
-        <button class="btn-primary" id="resetDataBtn">
-          <span>🧨</span> Réinitialiser la maquette
-        </button>
-      </div>
-    </header>
+<label>Type</label>
+<select id="type">
+<option>Départ</option>
+<option>Arrivée</option>
+</select>
 
-    <section class="layout">
-      <!-- Colonne gauche : structures -->
-      <div class="col-left">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">
-                <span class="icon">🏫</span>
-                Structures – Classes, salles, professeurs, matières
-              </div>
-              <div class="card-subtitle">
-                Ajoute tout ce dont tu as besoin pour construire tes emplois du temps.
-              </div>
-            </div>
-            <span class="tag blue">Base de données locale</span>
-          </div>
+<label>Destination / Provenance</label>
+<input id="destination">
 
-          <!-- Classes -->
-          <div class="form-group">
-            <label>Ajouter une classe</label>
-            <div class="form-row">
-              <input type="text" id="classNameInput" placeholder="Ex : 1ère G1, 2nde B, BTS SIO 1…" />
-              <button class="btn-ghost" id="addClassBtn">+ Classe</button>
-            </div>
-            <div class="chips" id="classesList"></div>
-          </div>
+<label>Voie</label>
+<select id="voie">
 
-          <!-- Salles -->
-          <div class="form-group">
-            <label>Ajouter une salle</label>
-            <div class="form-row">
-              <input type="text" id="roomNameInput" placeholder="Ex : 204, Lab Info 1, Amphi A…" />
-              <button class="btn-ghost" id="addRoomBtn">+ Salle</button>
-            </div>
-            <div class="chips" id="roomsList"></div>
-          </div>
+<option>A1</option>
+<option>A2</option>
 
-          <!-- Profs -->
-          <div class="form-group">
-            <label>Ajouter un professeur</label>
-            <div class="form-row">
-              <input type="text" id="teacherNameInput" placeholder="Ex : M. Laurent, Mme Dubois…" />
-              <button class="btn-ghost" id="addTeacherBtn">+ Prof</button>
-            </div>
-            <div class="chips" id="teachersList"></div>
-          </div>
+<option>B1</option>
+<option>B2</option>
+<option>B3</option>
 
-          <!-- Matières -->
-          <div class="form-group">
-            <label>Ajouter une matière</label>
-            <div class="form-row">
-              <input type="text" id="subjectNameInput" placeholder="Ex : Maths, NSI, Histoire…" />
-              <button class="btn-ghost" id="addSubjectBtn">+ Matière</button>
-            </div>
-            <div class="chips" id="subjectsList"></div>
-          </div>
+<option>C1</option>
+<option>C2</option>
+<option>C3</option>
 
-          <div class="footer">
-            <span>Tout est stocké en mémoire JS (rien n’est sauvegardé côté serveur).</span>
-            <span>Tu peux tout réinitialiser avec le bouton en haut.</span>
-          </div>
-        </div>
+<option>D1</option>
+<option>D2</option>
+<option>D3</option>
 
-        <!-- Formulaire de créneau -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">
-                <span class="icon">⚙️</span>
-                Création / édition de créneau
-              </div>
-              <div class="card-subtitle">
-                Clique sur une case vide ou un créneau dans le tableau pour pré-remplir.
-              </div>
-            </div>
-            <span class="tag green" id="slotModeTag">Mode : Nouveau créneau</span>
-          </div>
+<option>E1</option>
+<option>E2</option>
 
-          <div class="form-group">
-            <label>Classe</label>
-            <select id="slotClassSelect"></select>
-          </div>
+<option>F1</option>
+<option>F2</option>
 
-          <div class="form-row">
-            <div class="form-group" style="flex:1;">
-              <label>Jour</label>
-              <select id="slotDaySelect">
-                <option value="Lundi">Lundi</option>
-                <option value="Mardi">Mardi</option>
-                <option value="Mercredi">Mercredi</option>
-                <option value="Jeudi">Jeudi</option>
-                <option value="Vendredi">Vendredi</option>
-              </select>
-            </div>
-            <div class="form-group" style="flex:1;">
-              <label>Heure de début</label>
-              <input type="time" id="slotStartInput" value="08:00" />
-            </div>
-            <div class="form-group" style="flex:1;">
-              <label>Heure de fin</label>
-              <input type="time" id="slotEndInput" value="09:00" />
-            </div>
-          </div>
+</select>
 
-          <div class="form-row">
-            <div class="form-group" style="flex:1;">
-              <label>Matière</label>
-              <select id="slotSubjectSelect"></select>
-            </div>
-            <div class="form-group" style="flex:1;">
-              <label>Professeur</label>
-              <select id="slotTeacherSelect"></select>
-            </div>
-          </div>
+<label>Heure</label>
+<input type="time" id="heure">
 
-          <div class="form-row">
-            <div class="form-group" style="flex:1;">
-              <label>Salle</label>
-              <select id="slotRoomSelect"></select>
-            </div>
-            <div class="form-group" style="flex:1;">
-              <label class="small-label">Infos complémentaires (optionnel)</label>
-              <input type="text" id="slotExtraInput" placeholder="Chapitre, type de cours, groupe…" />
-            </div>
-          </div>
+<label>Status</label>
+<select id="status">
+<option value="ok">À l'heure</option>
+<option value="delay">Retard</option>
+<option value="problem">Problème</option>
+</select>
 
-          <div class="form-row" style="margin-top:6px;">
-            <button class="btn-primary" id="saveSlotBtn">
-              <span>💾</span> Enregistrer le créneau
-            </button>
-            <button class="btn-ghost danger" id="deleteSlotBtn" style="display:none;">
-              Supprimer ce créneau
-            </button>
-          </div>
-        </div>
-      </div>
+<button onclick="addTrain()">Ajouter Train</button>
 
-      <!-- Colonne droite : tableau EDT -->
-      <div class="col-right">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">
-                <span class="icon">📊</span>
-                Emploi du temps – Vue par classe
-              </div>
-              <div class="card-subtitle">
-                Sélectionne une classe, puis clique sur une case pour créer ou modifier un créneau.
-              </div>
-            </div>
-            <span class="tag orange" id="currentClassTag">Aucune classe sélectionnée</span>
-          </div>
+</div>
 
-          <div class="toolbar">
-            <div class="toolbar-left">
-              <span>Classe :</span>
-              <select id="viewClassSelect"></select>
-              <span>Plage horaire :</span>
-              <select id="timeRangeSelect">
-                <option value="8-17">08h – 17h</option>
-                <option value="8-18">08h – 18h</option>
-                <option value="9-17">09h – 17h</option>
-              </select>
-            </div>
-            <div class="toolbar-right">
-              <button class="btn-ghost" id="clearClassSlotsBtn">Vider l’EDT de la classe</button>
-            </div>
-          </div>
 
-          <div style="overflow:auto; max-height: 480px;">
-            <table class="timetable" id="timetableTable">
-              <!-- Généré en JS -->
-            </table>
-          </div>
+<div id="display">
 
-          <div class="legend">
-            <div class="legend-item">
-              <div class="legend-color subject"></div>
-              <span>Matière / cours</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color.teacher"></div>
-              <span>Professeur</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color.room"></div>
-              <span>Salle</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-color"></div>
-              <span>Infos complémentaires</span>
-            </div>
-          </div>
+<header>
 
-          <div class="footer">
-            <span>Prototype : pas de détection de conflits (salle/prof) pour l’instant, mais tu peux l’ajouter.</span>
-            <span>Tout est géré en JS côté client.</span>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
+<h1>Gare Paris Montparnasse</h1>
 
-  <script>
-    // --- Données en mémoire ---
-    const state = {
-      classes: ["1ère G1", "1ère G2"],
-      rooms: ["204", "Lab Info 1", "Amphi A"],
-      teachers: ["M. Laurent", "Mme Dubois", "M. Bernard"],
-      subjects: ["Maths", "Français", "NSI", "Histoire"],
-      slots: [], // {id, className, day, start, end, subject, teacher, room, extra}
-      editingSlotId: null,
-    };
+<div id="clock"></div>
 
-    const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
+</header>
 
-    // --- Helpers ---
-    function $(id) {
-      return document.getElementById(id);
-    }
+<table id="board">
 
-    function refreshChips() {
-      const makeChip = (text, onRemove) => {
-        const div = document.createElement("div");
-        div.className = "chip";
-        div.innerHTML = `<span>${text}</span><span class="remove">×</span>`;
-        div.querySelector(".remove").onclick = onRemove;
-        return div;
-      };
+<tr>
+<th>Train</th>
+<th>Type</th>
+<th>Destination</th>
+<th>Heure</th>
+<th>Voie</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
 
-      const classesList = $("classesList");
-      const roomsList = $("roomsList");
-      const teachersList = $("teachersList");
-      const subjectsList = $("subjectsList");
+</table>
 
-      classesList.innerHTML = "";
-      state.classes.forEach((c) =>
-        classesList.appendChild(
-          makeChip(c, () => {
-            state.classes = state.classes.filter((x) => x !== c);
-            state.slots = state.slots.filter((s) => s.className !== c);
-            refreshAll();
-          })
-        )
-      );
+</div>
 
-      roomsList.innerHTML = "";
-      state.rooms.forEach((r) =>
-        roomsList.appendChild(
-          makeChip(r, () => {
-            state.rooms = state.rooms.filter((x) => x !== r);
-            refreshAll();
-          })
-        )
-      );
 
-      teachersList.innerHTML = "";
-      state.teachers.forEach((t) =>
-        teachersList.appendChild(
-          makeChip(t, () => {
-            state.teachers = state.teachers.filter((x) => x !== t);
-            refreshAll();
-          })
-        )
-      );
+<script>
 
-      subjectsList.innerHTML = "";
-      state.subjects.forEach((s) =>
-        subjectsList.appendChild(
-          makeChip(s, () => {
-            state.subjects = state.subjects.filter((x) => x !== s);
-            refreshAll();
-          })
-        )
-      );
-    }
+let trains=[]
 
-    function refreshSelects() {
-      const fillSelect = (select, items) => {
-        select.innerHTML = "";
-        items.forEach((item) => {
-          const opt = document.createElement("option");
-          opt.value = item;
-          opt.textContent = item;
-          select.appendChild(opt);
-        });
-      };
+function addTrain(){
 
-      fillSelect($("slotClassSelect"), state.classes);
-      fillSelect($("viewClassSelect"), state.classes);
-      fillSelect($("slotRoomSelect"), state.rooms);
-      fillSelect($("slotTeacherSelect"), state.teachers);
-      fillSelect($("slotSubjectSelect"), state.subjects);
+let train=document.getElementById("train").value
+let type=document.getElementById("type").value
+let dest=document.getElementById("destination").value
+let voie=document.getElementById("voie").value
+let heure=document.getElementById("heure").value
+let status=document.getElementById("status").value
 
-      const currentClass = $("viewClassSelect").value || state.classes[0];
-      if (currentClass) {
-        $("viewClassSelect").value = currentClass;
-        $("slotClassSelect").value = currentClass;
-        $("currentClassTag").textContent = "Classe : " + currentClass;
-      } else {
-        $("currentClassTag").textContent = "Aucune classe sélectionnée";
-      }
-    }
+if(!train || !heure) return
 
-    function getTimeRange() {
-      const val = $("timeRangeSelect").value;
-      const [start, end] = val.split("-").map((x) => parseInt(x, 10));
-      const hours = [];
-      for (let h = start; h < end; h++) {
-        const startStr = (h < 10 ? "0" : "") + h + ":00";
-        const endStr = (h + 1 < 10 ? "0" : "") + (h + 1) + ":00";
-        hours.push({ label: `${startStr} – ${endStr}`, start: startStr, end: endStr });
-      }
-      return hours;
-    }
+trains.push({
+train,
+type,
+dest,
+voie,
+heure,
+status
+})
 
-    function refreshTimetable() {
-      const table = $("timetableTable");
-      table.innerHTML = "";
+updateBoard()
 
-      const currentClass = $("viewClassSelect").value;
-      if (!currentClass) {
-        table.innerHTML =
-          "<tr><td>Aucune classe définie. Ajoute une classe à gauche.</td></tr>";
-        return;
-      }
+}
 
-      const hours = getTimeRange();
+function deleteTrain(index){
 
-      // Header
-      const thead = document.createElement("thead");
-      const headerRow = document.createElement("tr");
-      const thEmpty = document.createElement("th");
-      thEmpty.textContent = "Heure";
-      headerRow.appendChild(thEmpty);
-      days.forEach((d) => {
-        const th = document.createElement("th");
-        th.textContent = d;
-        headerRow.appendChild(th);
-      });
-      thead.appendChild(headerRow);
-      table.appendChild(thead);
+trains.splice(index,1)
 
-      const tbody = document.createElement("tbody");
+updateBoard()
 
-      hours.forEach((h) => {
-        const tr = document.createElement("tr");
-        const thHour = document.createElement("th");
-        thHour.textContent = h.label;
-        tr.appendChild(thHour);
+}
 
-        days.forEach((day) => {
-          const td = document.createElement("td");
-          const slot = state.slots.find(
-            (s) =>
-              s.className === currentClass &&
-              s.day === day &&
-              s.start === h.start &&
-              s.end === h.end
-          );
+function updateBoard(){
 
-          if (slot) {
-            const div = document.createElement("div");
-            div.className = "slot";
-            div.innerHTML = `
-              <span class="line">${slot.subject || "Sans matière"}</span>
-              <span class="meta">${slot.teacher || "Sans prof"} – ${
-              slot.room || "Sans salle"
-            }</span>
-              ${
-                slot.extra
-                  ? `<span class="meta">${slot.extra}</span>`
-                  : ""
-              }
-            `;
-            div.onclick = () => loadSlotInForm(slot.id);
-            td.appendChild(div);
-          } else {
-            const div = document.createElement("div");
-            div.className = "slot empty";
-            div.innerHTML = `<span>+ Ajouter un créneau</span>`;
-            div.onclick = () => {
-              state.editingSlotId = null;
-              $("slotModeTag").textContent = "Mode : Nouveau créneau";
-              $("deleteSlotBtn").style.display = "none";
-              $("slotClassSelect").value = currentClass;
-              $("slotDaySelect").value = day;
-              $("slotStartInput").value = h.start;
-              $("slotEndInput").value = h.end;
-            };
-            td.appendChild(div);
-          }
+let table=document.getElementById("board")
 
-          tr.appendChild(td);
-        });
+table.innerHTML=`
 
-        tbody.appendChild(tr);
-      });
+<tr>
+<th>Train</th>
+<th>Type</th>
+<th>Destination</th>
+<th>Heure</th>
+<th>Voie</th>
+<th>Status</th>
+<th>Action</th>
+</tr>
 
-      table.appendChild(tbody);
-    }
+`
 
-    function loadSlotInForm(id) {
-      const slot = state.slots.find((s) => s.id === id);
-      if (!slot) return;
-      state.editingSlotId = id;
-      $("slotModeTag").textContent = "Mode : Édition de créneau";
-      $("deleteSlotBtn").style.display = "inline-block";
+trains
+.sort((a,b)=>a.heure.localeCompare(b.heure))
+.forEach((t,i)=>{
 
-      $("slotClassSelect").value = slot.className;
-      $("slotDaySelect").value = slot.day;
-      $("slotStartInput").value = slot.start;
-      $("slotEndInput").value = slot.end;
-      $("slotSubjectSelect").value = slot.subject;
-      $("slotTeacherSelect").value = slot.teacher;
-      $("slotRoomSelect").value = slot.room;
-      $("slotExtraInput").value = slot.extra || "";
-    }
+let statusText=""
+let statusClass=""
 
-    function saveSlot() {
-      const className = $("slotClassSelect").value;
-      const day = $("slotDaySelect").value;
-      const start = $("slotStartInput").value;
-      const end = $("slotEndInput").value;
-      const subject = $("slotSubjectSelect").value;
-      const teacher = $("slotTeacherSelect").value;
-      const room = $("slotRoomSelect").value;
-      const extra = $("slotExtraInput").value.trim();
+if(t.status==="ok"){
+statusText="À l'heure"
+statusClass="status-ok"
+}
 
-      if (!className || !day || !start || !end) return;
+if(t.status==="delay"){
+statusText="Retard"
+statusClass="status-delay"
+}
 
-      if (state.editingSlotId) {
-        const slot = state.slots.find((s) => s.id === state.editingSlotId);
-        if (!slot) return;
-        slot.className = className;
-        slot.day = day;
-        slot.start = start;
-        slot.end = end;
-        slot.subject = subject;
-        slot.teacher = teacher;
-        slot.room = room;
-        slot.extra = extra;
-      } else {
-        const id = Date.now().toString() + Math.random().toString(16).slice(2);
-        state.slots.push({
-          id,
-          className,
-          day,
-          start,
-          end,
-          subject,
-          teacher,
-          room,
-          extra,
-        });
-      }
+if(t.status==="problem"){
+statusText="Problème"
+statusClass="status-problem"
+}
 
-      state.editingSlotId = null;
-      $("slotModeTag").textContent = "Mode : Nouveau créneau";
-      $("deleteSlotBtn").style.display = "none";
-      refreshTimetable();
-    }
+table.innerHTML+=`
 
-    function deleteSlot() {
-      if (!state.editingSlotId) return;
-      state.slots = state.slots.filter((s) => s.id !== state.editingSlotId);
-      state.editingSlotId = null;
-      $("slotModeTag").textContent = "Mode : Nouveau créneau";
-      $("deleteSlotBtn").style.display = "none";
-      refreshTimetable();
-    }
+<tr>
 
-    function clearClassSlots() {
-      const currentClass = $("viewClassSelect").value;
-      if (!currentClass) return;
-      state.slots = state.slots.filter((s) => s.className !== currentClass);
-      refreshTimetable();
-    }
+<td>${t.train}</td>
+<td>${t.type}</td>
+<td>${t.dest}</td>
+<td>${t.heure}</td>
+<td>${t.voie}</td>
+<td class="${statusClass}">${statusText}</td>
 
-    function resetData() {
-      state.classes = ["1ère G1", "1ère G2"];
-      state.rooms = ["204", "Lab Info 1", "Amphi A"];
-      state.teachers = ["M. Laurent", "Mme Dubois", "M. Bernard"];
-      state.subjects = ["Maths", "Français", "NSI", "Histoire"];
-      state.slots = [];
-      state.editingSlotId = null;
-      refreshAll();
-    }
+<td>
+<span class="delete" onclick="deleteTrain(${i})">Supprimer</span>
+</td>
 
-    function refreshAll() {
-      refreshChips();
-      refreshSelects();
-      refreshTimetable();
-    }
+</tr>
 
-    // --- Events ---
-    window.onload = () => {
-      // Init
-      refreshAll();
+`
 
-      $("addClassBtn").onclick = () => {
-        const val = $("classNameInput").value.trim();
-        if (val && !state.classes.includes(val)) {
-          state.classes.push(val);
-          $("classNameInput").value = "";
-          refreshAll();
-        }
-      };
+})
 
-      $("addRoomBtn").onclick = () => {
-        const val = $("roomNameInput").value.trim();
-        if (val && !state.rooms.includes(val)) {
-          state.rooms.push(val);
-          $("roomNameInput").value = "";
-          refreshAll();
-        }
-      };
+}
 
-      $("addTeacherBtn").onclick = () => {
-        const val = $("teacherNameInput").value.trim();
-        if (val && !state.teachers.includes(val)) {
-          state.teachers.push(val);
-          $("teacherNameInput").value = "";
-          refreshAll();
-        }
-      };
+function updateClock(){
 
-      $("addSubjectBtn").onclick = () => {
-        const val = $("subjectNameInput").value.trim();
-        if (val && !state.subjects.includes(val)) {
-          state.subjects.push(val);
-          $("subjectNameInput").value = "";
-          refreshAll();
-        }
-      };
+let now=new Date()
 
-      $("viewClassSelect").onchange = () => {
-        const currentClass = $("viewClassSelect").value;
-        $("currentClassTag").textContent = currentClass
-          ? "Classe : " + currentClass
-          : "Aucune classe sélectionnée";
-        $("slotClassSelect").value = currentClass;
-        refreshTimetable();
-      };
+let h=now.getHours().toString().padStart(2,"0")
+let m=now.getMinutes().toString().padStart(2,"0")
+let s=now.getSeconds().toString().padStart(2,"0")
 
-      $("timeRangeSelect").onchange = refreshTimetable;
-      $("saveSlotBtn").onclick = saveSlot;
-      $("deleteSlotBtn").onclick = deleteSlot;
-      $("clearClassSlotsBtn").onclick = clearClassSlots;
-      $("resetDataBtn").onclick = resetData;
-    };
-  </script>
+document.getElementById("clock").innerText=h+":"+m+":"+s
+
+}
+
+setInterval(updateClock,1000)
+
+</script>
+
 </body>
 </html>
