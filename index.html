@@ -4,95 +4,32 @@
 <meta charset="UTF-8">
 <title>Poste de régulation - Gare Montparnasse</title>
 <style>
-body{
-margin:0;
-font-family:Segoe UI;
-background:#0b1120;
-color:white;
-display:flex;
-height:100vh;
-}
-.sidebar{
-width:340px;
-background:#020617;
-padding:20px;
-overflow:auto;
-}
-.main{
-flex:1;
-padding:20px;
-overflow:auto;
-}
+body{margin:0;font-family:Segoe UI;background:#0b1120;color:white;display:flex;height:100vh;}
+.sidebar{width:340px;background:#020617;padding:20px;overflow:auto;}
+.main{flex:1;padding:20px;overflow:auto;}
 h1,h2{margin-top:0;}
-input,select{
-width:100%;
-padding:8px;
-margin-bottom:10px;
-border-radius:5px;
-border:none;
-background:#1e293b;
-color:white;
-}
-button{
-padding:8px;
-border:none;
-border-radius:5px;
-background:#3b82f6;
-color:white;
-cursor:pointer;
-margin-bottom:5px;
-}
+input,select{width:100%;padding:8px;margin-bottom:10px;border-radius:5px;border:none;background:#1e293b;color:white;}
+button{padding:8px;border:none;border-radius:5px;background:#3b82f6;color:white;cursor:pointer;margin-bottom:5px;}
 button:hover{background:#2563eb;}
-table{
-width:100%;
-border-collapse:collapse;
-background:#020617;
-margin-bottom:20px;
-}
-th,td{
-padding:10px;
-border-bottom:1px solid #1e293b;
-text-align:center;
-}
+table{width:100%;border-collapse:collapse;background:#020617;margin-bottom:20px;}
+th,td{padding:10px;border-bottom:1px solid #1e293b;text-align:center;}
 .status-ok{color:#22c55e;}
 .status-delay{color:#f59e0b;}
 .status-incident{color:#ef4444;}
 .status-boarding{color:#38bdf8;}
 .status-cancel{color:#9ca3af;}
-.station{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:10px;
-margin-bottom:20px;
-}
-.platform{
-background:#1e293b;
-padding:20px;
-border-radius:8px;
-text-align:center;
-}
-.occupied{
-background:#ef4444;
-}
-.comm{
-background:#020617;
-padding:10px;
-height:180px;
-overflow:auto;
-font-size:13px;
-margin-bottom:20px;
-}
+.station{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+.platform{background:#1e293b;padding:20px;border-radius:8px;text-align:center;}
+.occupied{background:#ef4444;}
+.comm{background:#020617;padding:10px;height:180px;overflow:auto;font-size:13px;margin-bottom:20px;}
 .msg-normal{color:#38bdf8;}
 .msg-urgent{color:#f59e0b;}
 .msg-critical{color:#ef4444;font-weight:bold;}
-.announcement{
-background:#111827;
-padding:10px;
-margin-bottom:20px;
-}
+.announcement{background:#111827;padding:10px;margin-bottom:20px;}
 </style>
 </head>
 <body>
+
 <div class="sidebar">
 <h2>Gestion Train</h2>
 <input id="trainId" placeholder="Numéro train">
@@ -162,12 +99,10 @@ margin-bottom:20px;
 <audio id="trainAudio">
 <source src="https://www.soundjay.com/train/train-horn-01.mp3" type="audio/mpeg">
 </audio>
-
 </div>
 
 <script>
-let trains=[]
-let editIndex=null
+let trains=[], editIndex=null;
 
 function addTrain(){
 let train={
@@ -180,7 +115,7 @@ status:status.value
 }
 if(trains.find(t=>t.platform===train.platform)){
 train.status="incident"
-announce("⚠ Conflit sur "+train.platform+" avec train existant "+trains.find(t=>t.platform===train.platform).id)
+announce("⚠ Conflit sur "+train.platform+" avec "+trains.find(t=>t.platform===train.platform).id)
 }
 trains.push(train)
 announce("📢 Train "+train.id+" "+train.type+" "+train.dest+" voie "+train.platform)
@@ -230,12 +165,15 @@ p.classList.remove("occupied")
 p.innerText=p.id.replace("Q","Quai ")
 })
 trains.forEach((t,i)=>{
-let statusClass="",statusText=""
-if(t.status==="ok"){statusClass="status-ok";statusText="À l'heure"}
-if(t.status==="delay"){statusClass="status-delay";statusText="Retard"}
-if(t.status==="boarding"){statusClass="status-boarding";statusText="Embarquement"}
-if(t.status==="incident"){statusClass="status-incident";statusText="Incident"}
-if(t.status==="cancel"){statusClass="status-cancel";statusText="Annulé"}
+let statusClass="", statusText=""
+switch(t.status){
+case "ok": statusClass="status-ok"; statusText="À l'heure"; break;
+case "delay": statusClass="status-delay"; statusText="Retard"; break;
+case "boarding": statusClass="status-boarding"; statusText="Embarquement"; break;
+case "incident": statusClass="status-incident"; statusText="Incident"; break;
+case "cancel": statusClass="status-cancel"; statusText="Annulé"; break;
+default: statusClass=""; statusText=t.status;
+}
 table.innerHTML+=`<tr>
 <td>${t.id}</td><td>${t.type}</td><td>${t.dest}</td><td>${t.platform}</td><td>${t.time}</td>
 <td class="${statusClass}">${statusText}</td>
@@ -270,6 +208,5 @@ audio.currentTime=0
 audio.play()
 }
 </script>
-
 </body>
 </html>
