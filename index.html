@@ -4,20 +4,37 @@
 <meta charset="UTF-8">
 <title>Poste de régulation - Gare Montparnasse</title>
 <style>
-body{margin:0;font-family:Segoe UI;background:#0b1120;color:white;display:flex;height:100vh;}
-.sidebar{width:340px;background:#020617;padding:20px;overflow:auto;}
+body{margin:0;font-family:Segoe UI,system-ui,-apple-system,sans-serif;background:#0b1120;color:white;display:flex;height:100vh;}
+.sidebar{width:340px;background:#020617;padding:20px;overflow:auto;border-right:1px solid #1e293b;}
 .main{flex:1;padding:20px;overflow:auto;}
 h1,h2{margin-top:0;}
-input,select{width:100%;padding:8px;margin-bottom:10px;border-radius:5px;border:none;background:#1e293b;color:white;}
-button{padding:8px;border:none;border-radius:5px;background:#3b82f6;color:white;cursor:pointer;margin-bottom:5px;}
+input,select{width:100%;padding:8px;margin-bottom:10px;border-radius:5px;border:1px solid #1f2937;background:#020617;color:white;}
+input:focus,select:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 1px #3b82f6;}
+button{padding:8px 10px;border:none;border-radius:5px;background:#3b82f6;color:white;cursor:pointer;margin-bottom:5px;font-size:13px;}
 button:hover{background:#2563eb;}
-table{width:100%;border-collapse:collapse;background:#020617;margin-bottom:20px;}
-th,td{padding:10px;border-bottom:1px solid #1e293b;text-align:center;}
+button.danger{background:#ef4444;}
+button.danger:hover{background:#b91c1c;}
+table{width:100%;border-collapse:collapse;background:#020617;margin-bottom:20px;border-radius:8px;overflow:hidden;}
+th,td{padding:10px;border-bottom:1px solid #1e293b;text-align:center;font-size:14px;}
+th{background:#020617;}
 .station{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
-.platform{background:#1e293b;padding:20px;border-radius:8px;text-align:center;}
-.occupied{background:#ef4444;}
-.comm{background:#020617;padding:10px;height:180px;overflow:auto;font-size:13px;margin-bottom:20px;}
-.announcement{background:#111827;padding:10px;margin-bottom:20px;}
+.platform{background:#1e293b;padding:20px;border-radius:8px;text-align:center;transition:background .2s,transform .1s;}
+.platform.occupied{background:#ef4444;}
+.platform.occupied strong{display:block;margin-top:5px;font-size:13px;}
+.comm{background:#020617;padding:10px;height:200px;overflow:auto;font-size:13px;margin-bottom:20px;border-radius:8px;border:1px solid #1e293b;}
+.announcement{background:#111827;padding:10px;margin-bottom:20px;border-radius:8px;border:1px solid #1e293b;font-size:14px;}
+.status-badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;}
+.status-on-time{background:#16a34a33;color:#4ade80;}
+.status-delay{background:#f9731633;color:#fdba74;}
+.status-cancelled{background:#ef444433;color:#fecaca;}
+.status-other{background:#4b556333;color:#e5e7eb;}
+.msg-normal{color:#e5e7eb;margin-bottom:4px;}
+.msg-urgent{color:#fbbf24;margin-bottom:4px;}
+.msg-critical{color:#f87171;font-weight:600;margin-bottom:4px;}
+.msg-critical::before{content:"⚠ ";}
+
+/* Ligne survolée */
+tbody tr:hover{background:#020617;}
 </style>
 </head>
 <body>
@@ -39,9 +56,9 @@ th,td{padding:10px;border-bottom:1px solid #1e293b;text-align:center;}
 <label>Heure prévue</label>
 <input type="time" id="time">
 <!-- Statut texte libre -->
-<input type="text" id="status" placeholder="Statut (ex : À l'heure, Retard)">
-<button onclick="addTrain()">Ajouter</button>
-<button onclick="saveEdit()">Enregistrer modification</button>
+<input type="text" id="statusInput" placeholder="Statut (ex : À l'heure, Retard, Supprimé)">
+<button id="addBtn">Ajouter</button>
+<button id="saveBtn">Enregistrer modification</button>
 <hr>
 <h2>Communication interne</h2>
 <select id="channel">
@@ -57,7 +74,7 @@ th,td{padding:10px;border-bottom:1px solid #1e293b;text-align:center;}
 <option value="critical">Critique</option>
 </select>
 <input id="message" placeholder="Message">
-<button onclick="sendMessage()">Envoyer message</button>
+<button id="sendMsgBtn">Envoyer message</button>
 </div>
 
 <div class="main">
@@ -75,9 +92,12 @@ th,td{padding:10px;border-bottom:1px solid #1e293b;text-align:center;}
 
 <h2>Tableau ferroviaire</h2>
 <table id="table">
+<thead>
 <tr>
 <th>Train</th><th>Type</th><th>Destination</th><th>Quai</th><th>Heure</th><th>Status</th><th>Actions</th>
 </tr>
+</thead>
+<tbody id="tableBody"></tbody>
 </table>
 
 <h2>Communications</h2>
@@ -90,103 +110,169 @@ th,td{padding:10px;border-bottom:1px solid #1e293b;text-align:center;}
 </div>
 
 <script>
-let trains=[], editIndex=null;
+let trains = [];
+let editIndex = null;
+
+// Raccourcis vers les éléments (plus de globals implicites chelous)
+const trainIdInput   = document.getElementById("trainId");
+const typeSelect     = document.getElementById("type");
+const destInput      = document.getElementById("destination");
+const platformSelect = document.getElementById("platform");
+const timeInput      = document.getElementById("time");
+const statusInput    = document.getElementById("statusInput");
+const tableBody      = document.getElementById("tableBody");
+const announcementEl = document.getElementById("announcement");
+const commDiv        = document.getElementById("communications");
+const audioEl        = document.getElementById("trainAudio");
+
+// Boutons
+document.getElementById("addBtn").onclick    = addTrain;
+document.getElementById("saveBtn").onclick   = saveEdit;
+document.getElementById("sendMsgBtn").onclick= sendMessage;
+
+function getStatusClass(text){
+  if(!text) return "status-other";
+  const t = text.toLowerCase();
+  if(t.includes("heure")) return "status-on-time";
+  if(t.includes("retard")) return "status-delay";
+  if(t.includes("supprim")) return "status-cancelled";
+  return "status-other";
+}
 
 function addTrain(){
-let train={
-id:trainId.value,
-type:type.value,
-dest:destination.value,
-platform:platform.value,
-time:time.value,
-status:status.value
-}
-// Conflit de quai : on garde l'incident mais le statut reste ce que tu écris
-if(trains.find(t=>t.platform===train.platform)){
-announce("⚠ Conflit sur "+train.platform+" avec "+trains.find(t=>t.platform===train.platform).id)
-}
-trains.push(train)
-announce("📢 Train "+train.id+" "+train.type+" "+train.dest+" voie "+train.platform)
-playAudio()
-update()
+  const train = {
+    id: trainIdInput.value.trim(),
+    type: typeSelect.value,
+    dest: destInput.value.trim(),
+    platform: platformSelect.value,
+    time: timeInput.value,
+    status: statusInput.value.trim()
+  };
+
+  if(!train.id || !train.dest || !train.time){
+    announce("⚠ Merci de remplir au minimum : numéro, destination et heure.");
+    return;
+  }
+
+  const conflict = trains.find(t => t.platform === train.platform);
+  if(conflict){
+    announce("⚠ Conflit sur " + train.platform + " avec " + conflict.id);
+  }
+
+  trains.push(train);
+  announce("📢 Train " + train.id + " " + train.type + " " + train.dest + " voie " + train.platform);
+  playAudio();
+  clearForm();
+  update();
 }
 
 function editTrain(i){
-let t=trains[i]
-trainId.value=t.id
-type.value=t.type
-destination.value=t.dest
-platform.value=t.platform
-time.value=t.time
-status.value=t.status
-editIndex=i
+  const t = trains[i];
+  trainIdInput.value   = t.id;
+  typeSelect.value     = t.type;
+  destInput.value      = t.dest;
+  platformSelect.value = t.platform;
+  timeInput.value      = t.time;
+  statusInput.value    = t.status;
+  editIndex = i;
 }
 
 function saveEdit(){
-if(editIndex===null) return
-trains[editIndex]={
-id:trainId.value,
-type:type.value,
-dest:destination.value,
-platform:platform.value,
-time:time.value,
-status:status.value
-}
-announce("✏ Train "+trainId.value+" modifié")
-playAudio()
-editIndex=null
-update()
+  if(editIndex === null) return;
+
+  trains[editIndex] = {
+    id: trainIdInput.value.trim(),
+    type: typeSelect.value,
+    dest: destInput.value.trim(),
+    platform: platformSelect.value,
+    time: timeInput.value,
+    status: statusInput.value.trim()
+  };
+
+  announce("✏ Train " + trainIdInput.value + " modifié");
+  playAudio();
+  editIndex = null;
+  clearForm();
+  update();
 }
 
 function deleteTrain(i){
-trains.splice(i,1)
-update()
+  const removed = trains[i];
+  trains.splice(i,1);
+  announce("🗑 Train " + removed.id + " supprimé du tableau");
+  update();
+}
+
+function clearForm(){
+  trainIdInput.value = "";
+  destInput.value = "";
+  timeInput.value = "";
+  statusInput.value = "";
+  // on ne reset pas type / quai pour aller vite
 }
 
 function update(){
-let table=document.getElementById("table")
-table.innerHTML=`<tr>
-<th>Train</th><th>Type</th><th>Destination</th><th>Quai</th><th>Heure</th><th>Status</th><th>Actions</th>
-</tr>`
-document.querySelectorAll(".platform").forEach(p=>{
-p.classList.remove("occupied")
-p.innerText=p.id.replace("Q","Quai ")
-})
-trains.forEach((t,i)=>{
-let statusText=t.status; // on affiche exactement ce que l'utilisateur a écrit
-table.innerHTML+=`<tr>
-<td>${t.id}</td><td>${t.type}</td><td>${t.dest}</td><td>${t.platform}</td><td>${t.time}</td>
-<td>${statusText}</td>
-<td>
-<button onclick="editTrain(${i})">Modifier</button>
-<button onclick="deleteTrain(${i})">Supprimer</button>
-</td>
-</tr>`
-let quai=document.getElementById(t.platform)
-quai.classList.add("occupied")
-quai.innerText=t.platform+" - "+t.id
-})
+  tableBody.innerHTML = "";
+
+  // reset quais
+  document.querySelectorAll(".platform").forEach(p=>{
+    p.classList.remove("occupied");
+    p.innerHTML = p.id.replace("Q","Quai ");
+  });
+
+  trains.forEach((t,i)=>{
+    const tr = document.createElement("tr");
+
+    const statusClass = getStatusClass(t.status);
+    const statusHtml = `<span class="status-badge ${statusClass}">${t.status || "—"}</span>`;
+
+    tr.innerHTML = `
+      <td>${t.id}</td>
+      <td>${t.type}</td>
+      <td>${t.dest}</td>
+      <td>${t.platform}</td>
+      <td>${t.time}</td>
+      <td>${statusHtml}</td>
+      <td>
+        <button onclick="editTrain(${i})">Modifier</button>
+        <button class="danger" onclick="deleteTrain(${i})">Supprimer</button>
+      </td>
+    `;
+    tableBody.appendChild(tr);
+
+    const quai = document.getElementById(t.platform);
+    if(quai){
+      quai.classList.add("occupied");
+      quai.innerHTML = `Quai ${t.platform.replace("Q","")}<strong>${t.id} – ${t.dest}</strong>`;
+    }
+  });
 }
 
 function sendMessage(){
-let time=new Date().toLocaleTimeString()
-let channel=document.getElementById("channel").value
-let pr=document.getElementById("priority").value
-let msg=document.getElementById("message").value
-let div=document.getElementById("communications")
-div.innerHTML+=`<div class="msg-${pr}">[${time}] (${channel}) : ${msg}</div>`
-div.scrollTop=div.scrollHeight
+  const time = new Date().toLocaleTimeString();
+  const channel = document.getElementById("channel").value;
+  const pr = document.getElementById("priority").value;
+  const msg = document.getElementById("message").value.trim();
+  if(!msg) return;
+
+  const cls = "msg-" + pr;
+  commDiv.innerHTML += `<div class="${cls}">[${time}] (${channel}) : ${msg}</div>`;
+  commDiv.scrollTop = commDiv.scrollHeight;
+  document.getElementById("message").value = "";
 }
 
 function announce(text){
-document.getElementById("announcement").innerText=text
+  announcementEl.innerText = text;
 }
 
 function playAudio(){
-let audio=document.getElementById("trainAudio")
-audio.currentTime=0
-audio.play()
+  audioEl.currentTime = 0;
+  audioEl.play();
 }
+
+// Expose quelques fonctions pour les boutons inline
+window.editTrain = editTrain;
+window.deleteTrain = deleteTrain;
 </script>
 </body>
 </html>
