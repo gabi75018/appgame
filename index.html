@@ -2,10 +2,8 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Poste de Régulation - Gare Montparnasse</title>
-
+<title>Poste de régulation - Gare Montparnasse</title>
 <style>
-
 body{
 margin:0;
 font-family:Segoe UI;
@@ -14,24 +12,18 @@ color:white;
 display:flex;
 height:100vh;
 }
-
 .sidebar{
 width:340px;
 background:#020617;
 padding:20px;
 overflow:auto;
 }
-
 .main{
 flex:1;
 padding:20px;
 overflow:auto;
 }
-
-h1,h2{
-margin-top:0;
-}
-
+h1,h2{margin-top:0;}
 input,select{
 width:100%;
 padding:8px;
@@ -41,7 +33,6 @@ border:none;
 background:#1e293b;
 color:white;
 }
-
 button{
 padding:8px;
 border:none;
@@ -49,49 +40,40 @@ border-radius:5px;
 background:#3b82f6;
 color:white;
 cursor:pointer;
+margin-bottom:5px;
 }
-
-button:hover{
-background:#2563eb;
-}
-
+button:hover{background:#2563eb;}
 table{
 width:100%;
 border-collapse:collapse;
 background:#020617;
 margin-bottom:20px;
 }
-
 th,td{
 padding:10px;
 border-bottom:1px solid #1e293b;
 text-align:center;
 }
-
 .status-ok{color:#22c55e;}
 .status-delay{color:#f59e0b;}
 .status-incident{color:#ef4444;}
 .status-boarding{color:#38bdf8;}
 .status-cancel{color:#9ca3af;}
-
 .station{
 display:grid;
 grid-template-columns:repeat(4,1fr);
 gap:10px;
 margin-bottom:20px;
 }
-
 .platform{
 background:#1e293b;
 padding:20px;
 border-radius:8px;
 text-align:center;
 }
-
 .occupied{
 background:#ef4444;
 }
-
 .comm{
 background:#020617;
 padding:10px;
@@ -100,45 +82,33 @@ overflow:auto;
 font-size:13px;
 margin-bottom:20px;
 }
-
 .msg-normal{color:#38bdf8;}
 .msg-urgent{color:#f59e0b;}
 .msg-critical{color:#ef4444;font-weight:bold;}
-
 .announcement{
 background:#111827;
 padding:10px;
 margin-bottom:20px;
 }
-
 </style>
 </head>
-
 <body>
-
 <div class="sidebar">
-
 <h2>Gestion Train</h2>
-
 <input id="trainId" placeholder="Numéro train">
-
 <select id="type">
 <option>Départ</option>
 <option>Arrivée</option>
 </select>
-
 <input id="destination" placeholder="Destination / provenance">
-
 <select id="platform">
 <option>Q1</option>
 <option>Q2</option>
 <option>Q3</option>
 <option>Q4</option>
 </select>
-
 <label>Heure prévue</label>
 <input type="time" id="time">
-
 <select id="status">
 <option value="ok">À l'heure</option>
 <option value="delay">Retard</option>
@@ -146,14 +116,10 @@ margin-bottom:20px;
 <option value="incident">Incident</option>
 <option value="cancel">Annulé</option>
 </select>
-
 <button onclick="addTrain()">Ajouter</button>
 <button onclick="saveEdit()">Enregistrer modification</button>
-
 <hr>
-
 <h2>Communication interne</h2>
-
 <select id="channel">
 <option>Agents de quai</option>
 <option>Sécurité</option>
@@ -161,67 +127,49 @@ margin-bottom:20px;
 <option>Information voyageurs</option>
 <option>Régulation ferroviaire</option>
 </select>
-
 <select id="priority">
 <option value="normal">Normal</option>
 <option value="urgent">Urgent</option>
 <option value="critical">Critique</option>
 </select>
-
 <input id="message" placeholder="Message">
-
 <button onclick="sendMessage()">Envoyer message</button>
-
 </div>
 
 <div class="main">
-
 <h1>Poste de régulation - Paris Montparnasse</h1>
-
 <h2>Annonce voyageurs</h2>
-
 <div id="announcement" class="announcement">Aucune annonce</div>
 
 <h2>Plan de la gare</h2>
-
 <div class="station">
-
 <div id="Q1" class="platform">Quai 1</div>
 <div id="Q2" class="platform">Quai 2</div>
 <div id="Q3" class="platform">Quai 3</div>
 <div id="Q4" class="platform">Quai 4</div>
-
 </div>
 
 <h2>Tableau ferroviaire</h2>
-
 <table id="table">
-
 <tr>
-<th>Train</th>
-<th>Type</th>
-<th>Destination</th>
-<th>Quai</th>
-<th>Heure</th>
-<th>Status</th>
-<th>Actions</th>
+<th>Train</th><th>Type</th><th>Destination</th><th>Quai</th><th>Heure</th><th>Status</th><th>Actions</th>
 </tr>
-
 </table>
 
 <h2>Communications</h2>
-
 <div id="communications" class="comm"></div>
+
+<audio id="trainAudio">
+<source src="https://www.soundjay.com/train/train-horn-01.mp3" type="audio/mpeg">
+</audio>
 
 </div>
 
 <script>
-
 let trains=[]
 let editIndex=null
 
 function addTrain(){
-
 let train={
 id:trainId.value,
 type:type.value,
@@ -230,34 +178,29 @@ platform:platform.value,
 time:time.value,
 status:status.value
 }
-
+if(trains.find(t=>t.platform===train.platform)){
+train.status="incident"
+announce("⚠ Conflit sur "+train.platform+" avec train existant "+trains.find(t=>t.platform===train.platform).id)
+}
 trains.push(train)
-
 announce("📢 Train "+train.id+" "+train.type+" "+train.dest+" voie "+train.platform)
-
+playAudio()
 update()
-
 }
 
 function editTrain(i){
-
 let t=trains[i]
-
 trainId.value=t.id
 type.value=t.type
 destination.value=t.dest
 platform.value=t.platform
 time.value=t.time
 status.value=t.status
-
 editIndex=i
-
 }
 
 function saveEdit(){
-
 if(editIndex===null) return
-
 trains[editIndex]={
 id:trainId.value,
 type:type.value,
@@ -266,102 +209,66 @@ platform:platform.value,
 time:time.value,
 status:status.value
 }
-
 announce("✏ Train "+trainId.value+" modifié")
-
+playAudio()
 editIndex=null
-
 update()
-
 }
 
 function deleteTrain(i){
-
 trains.splice(i,1)
-
 update()
-
 }
 
 function update(){
-
 let table=document.getElementById("table")
-
-table.innerHTML=`
-<tr>
-<th>Train</th>
-<th>Type</th>
-<th>Destination</th>
-<th>Quai</th>
-<th>Heure</th>
-<th>Status</th>
-<th>Actions</th>
-</tr>
-`
-
+table.innerHTML=`<tr>
+<th>Train</th><th>Type</th><th>Destination</th><th>Quai</th><th>Heure</th><th>Status</th><th>Actions</th>
+</tr>`
 document.querySelectorAll(".platform").forEach(p=>{
 p.classList.remove("occupied")
 p.innerText=p.id.replace("Q","Quai ")
 })
-
 trains.forEach((t,i)=>{
-
-let statusClass="status-ok"
-
-if(t.status==="delay") statusClass="status-delay"
-if(t.status==="incident") statusClass="status-incident"
-if(t.status==="boarding") statusClass="status-boarding"
-if(t.status==="cancel") statusClass="status-cancel"
-
-table.innerHTML+=`
-
-<tr>
-<td>${t.id}</td>
-<td>${t.type}</td>
-<td>${t.dest}</td>
-<td>${t.platform}</td>
-<td>${t.time}</td>
-<td class="${statusClass}">${t.status}</td>
-
+let statusClass="",statusText=""
+if(t.status==="ok"){statusClass="status-ok";statusText="À l'heure"}
+if(t.status==="delay"){statusClass="status-delay";statusText="Retard"}
+if(t.status==="boarding"){statusClass="status-boarding";statusText="Embarquement"}
+if(t.status==="incident"){statusClass="status-incident";statusText="Incident"}
+if(t.status==="cancel"){statusClass="status-cancel";statusText="Annulé"}
+table.innerHTML+=`<tr>
+<td>${t.id}</td><td>${t.type}</td><td>${t.dest}</td><td>${t.platform}</td><td>${t.time}</td>
+<td class="${statusClass}">${statusText}</td>
 <td>
 <button onclick="editTrain(${i})">Modifier</button>
 <button onclick="deleteTrain(${i})">Supprimer</button>
 </td>
-
-</tr>
-`
-
+</tr>`
 let quai=document.getElementById(t.platform)
-
 quai.classList.add("occupied")
 quai.innerText=t.platform+" - "+t.id
-
 })
-
 }
 
 function sendMessage(){
-
 let time=new Date().toLocaleTimeString()
-
 let channel=document.getElementById("channel").value
 let pr=document.getElementById("priority").value
 let msg=document.getElementById("message").value
-
 let div=document.getElementById("communications")
-
 div.innerHTML+=`<div class="msg-${pr}">[${time}] (${channel}) : ${msg}</div>`
-
 div.scrollTop=div.scrollHeight
-
 }
 
 function announce(text){
-
 document.getElementById("announcement").innerText=text
-
 }
 
+function playAudio(){
+let audio=document.getElementById("trainAudio")
+audio.currentTime=0
+audio.play()
+}
 </script>
 
 </body>
