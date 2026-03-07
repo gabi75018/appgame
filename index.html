@@ -2,346 +2,363 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Centre de contrôle - Gare Montparnasse</title>
+<title>Centre de Contrôle - Paris Montparnasse</title>
 
 <style>
 
 body{
 margin:0;
-font-family:Segoe UI,Arial;
-background:#0f172a;
+font-family:Segoe UI;
+background:#0b1120;
 color:white;
 display:flex;
 height:100vh;
+overflow:hidden;
 }
 
-/* PANEL */
-
-#panel{
-width:350px;
+.sidebar{
+width:320px;
 background:#020617;
-padding:25px;
-box-shadow:0 0 20px black;
+padding:20px;
 overflow:auto;
 }
 
-#panel h1{
-font-size:22px;
-margin-bottom:20px;
+.main{
+flex:1;
+padding:25px;
+overflow:auto;
 }
 
-label{
-font-size:13px;
-opacity:0.7;
+h1{
+margin-top:0;
 }
 
-input,select{
-
+input,select,textarea{
 width:100%;
-padding:10px;
-margin-top:5px;
-margin-bottom:15px;
-border:none;
+padding:8px;
+margin-bottom:10px;
 border-radius:6px;
+border:none;
 background:#1e293b;
 color:white;
 }
 
 button{
-
-width:100%;
-padding:12px;
-background:#3b82f6;
+padding:10px;
 border:none;
 border-radius:6px;
+background:#3b82f6;
 color:white;
-font-weight:bold;
 cursor:pointer;
+margin-bottom:10px;
 }
 
 button:hover{
 background:#2563eb;
 }
 
-/* DISPLAY */
-
-#display{
-
-flex:1;
-padding:30px;
-}
-
-header{
-
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:25px;
-
-}
-
-header h1{
-
-font-size:30px;
-}
-
-#clock{
-
-font-size:22px;
-color:#38bdf8;
-
-}
-
 table{
-
 width:100%;
 border-collapse:collapse;
 background:#020617;
-border-radius:10px;
-overflow:hidden;
 }
 
-th{
+th,td{
+padding:12px;
+border-bottom:1px solid #1e293b;
+text-align:center;
+}
 
+.status-ok{color:#22c55e;}
+.status-delay{color:#f59e0b;}
+.status-incident{color:#ef4444;}
+.status-boarding{color:#38bdf8;}
+
+.dashboard{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:15px;
+margin-bottom:20px;
+}
+
+.card{
 background:#020617;
 padding:15px;
-font-size:14px;
-text-transform:uppercase;
-letter-spacing:1px;
-border-bottom:2px solid #1e293b;
-
-}
-
-td{
-
-padding:15px;
+border-radius:10px;
 text-align:center;
-border-bottom:1px solid #1e293b;
-
 }
 
-.status-ok{
-
-color:#22c55e;
-font-weight:bold;
-
-}
-
-.status-delay{
-
-color:#f59e0b;
-font-weight:bold;
-
-}
-
-.status-problem{
-
-color:#ef4444;
-font-weight:bold;
-
-}
-
-.delete{
-
-background:#ef4444;
-padding:6px 10px;
-border-radius:4px;
-cursor:pointer;
-
-}
-
-.delete:hover{
-
-background:#dc2626;
-
+.log{
+background:#020617;
+padding:10px;
+height:150px;
+overflow:auto;
+font-size:13px;
 }
 
 </style>
-
 </head>
 
 <body>
 
-<div id="panel">
+<div class="sidebar">
 
-<h1>Centre de gestion</h1>
+<h2>Gestion Train</h2>
 
-<label>Numéro du train</label>
-<input id="train">
+<input id="trainId" placeholder="Numéro train">
 
-<label>Type</label>
 <select id="type">
 <option>Départ</option>
 <option>Arrivée</option>
 </select>
 
-<label>Destination / Provenance</label>
-<input id="destination">
+<input id="destination" placeholder="Destination / Provenance">
 
-<label>Voie</label>
-<select id="voie">
-
-<option>A1</option>
-<option>A2</option>
-
-<option>B1</option>
-<option>B2</option>
-<option>B3</option>
-
-<option>C1</option>
-<option>C2</option>
-<option>C3</option>
-
-<option>D1</option>
-<option>D2</option>
-<option>D3</option>
-
-<option>E1</option>
-<option>E2</option>
-
-<option>F1</option>
-<option>F2</option>
-
+<select id="quai">
+<option>Q1</option>
+<option>Q2</option>
+<option>Q3</option>
+<option>Q4</option>
+<option>Q5</option>
+<option>Q6</option>
+<option>Q7</option>
+<option>Q8</option>
 </select>
 
-<label>Heure</label>
-<input type="time" id="heure">
+<label>Heure prévue</label>
+<input type="time" id="heurePrevue">
 
-<label>Status</label>
+<label>Heure réelle</label>
+<input type="time" id="heureReelle">
+
 <select id="status">
 <option value="ok">À l'heure</option>
 <option value="delay">Retard</option>
-<option value="problem">Problème</option>
+<option value="boarding">Embarquement</option>
+<option value="incident">Incident</option>
+<option value="cancel">Annulé</option>
 </select>
 
-<button onclick="addTrain()">Ajouter Train</button>
+<button onclick="addTrain()">Ajouter train</button>
+<button onclick="updateTrain()">Modifier train</button>
+
+<hr>
+
+<h2>Communication agents</h2>
+
+<textarea id="messageAgent" placeholder="Message aux agents"></textarea>
+
+<button onclick="sendMessage()">Envoyer</button>
+
+<hr>
+
+<h2>Sécurité</h2>
+
+<button onclick="securityAlert()">⚠ Alerte sécurité</button>
 
 </div>
 
 
-<div id="display">
+<div class="main">
 
-<header>
+<h1>Centre de contrôle - Gare Paris Montparnasse</h1>
 
-<h1>Gare Paris Montparnasse</h1>
+<div class="dashboard">
 
-<div id="clock"></div>
+<div class="card">
+<h3 id="clock"></h3>
+Horloge
+</div>
 
-</header>
+<div class="card">
+<h3 id="trainCount">0</h3>
+Trains en gestion
+</div>
 
-<table id="board">
+<div class="card">
+<h3 id="incidentCount">0</h3>
+Incidents
+</div>
+
+<div class="card">
+<h3>8</h3>
+Quais disponibles
+</div>
+
+</div>
+
+<h2>Tableau ferroviaire</h2>
+
+<table id="trainTable">
 
 <tr>
 <th>Train</th>
 <th>Type</th>
 <th>Destination</th>
-<th>Heure</th>
-<th>Voie</th>
+<th>Quai</th>
+<th>Prévu</th>
+<th>Réel</th>
 <th>Status</th>
 <th>Action</th>
 </tr>
 
 </table>
 
-</div>
+<h2>Journal opérations</h2>
 
+<div id="log" class="log"></div>
+
+<h2>Messages agents</h2>
+
+<div id="messages" class="log"></div>
+
+</div>
 
 <script>
 
 let trains=[]
+let incidents=0
+
+function log(text){
+
+let logDiv=document.getElementById("log")
+
+let time=new Date().toLocaleTimeString()
+
+logDiv.innerHTML+="["+time+"] "+text+"<br>"
+
+logDiv.scrollTop=logDiv.scrollHeight
+
+}
 
 function addTrain(){
 
-let train=document.getElementById("train").value
-let type=document.getElementById("type").value
-let dest=document.getElementById("destination").value
-let voie=document.getElementById("voie").value
-let heure=document.getElementById("heure").value
-let status=document.getElementById("status").value
+let id=document.getElementById("trainId").value
 
-if(!train || !heure) return
+if(!id) return
 
-trains.push({
-train,
-type,
-dest,
-voie,
-heure,
-status
-})
+let train={
+id:id,
+type:type.value,
+dest:destination.value,
+quai:quai.value,
+prev:heurePrevue.value,
+real:heureReelle.value,
+status:status.value
+}
 
-updateBoard()
+let conflit=trains.find(t=>t.quai===train.quai && t.prev===train.prev)
+
+if(conflit){
+log("⚠ Conflit quai "+train.quai+" avec train "+conflit.id)
+}
+
+trains.push(train)
+
+log("Train "+id+" ajouté")
+
+updateTable()
+
+}
+
+function updateTrain(){
+
+let id=document.getElementById("trainId").value
+
+let train=trains.find(t=>t.id===id)
+
+if(!train) return
+
+train.type=type.value
+train.dest=destination.value
+train.quai=quai.value
+train.prev=heurePrevue.value
+train.real=heureReelle.value
+train.status=status.value
+
+log("Train "+id+" modifié")
+
+updateTable()
 
 }
 
 function deleteTrain(index){
 
+log("Train "+trains[index].id+" supprimé")
+
 trains.splice(index,1)
 
-updateBoard()
+updateTable()
 
 }
 
-function updateBoard(){
+function updateTable(){
 
-let table=document.getElementById("board")
+let table=document.getElementById("trainTable")
 
 table.innerHTML=`
-
 <tr>
 <th>Train</th>
 <th>Type</th>
 <th>Destination</th>
-<th>Heure</th>
-<th>Voie</th>
+<th>Quai</th>
+<th>Prévu</th>
+<th>Réel</th>
 <th>Status</th>
 <th>Action</th>
 </tr>
-
 `
 
-trains
-.sort((a,b)=>a.heure.localeCompare(b.heure))
-.forEach((t,i)=>{
+let incidentCount=0
 
-let statusText=""
-let statusClass=""
+trains.forEach((t,i)=>{
 
-if(t.status==="ok"){
-statusText="À l'heure"
-statusClass="status-ok"
-}
+let statusClass="status-ok"
 
-if(t.status==="delay"){
-statusText="Retard"
-statusClass="status-delay"
-}
-
-if(t.status==="problem"){
-statusText="Problème"
-statusClass="status-problem"
-}
+if(t.status==="delay") statusClass="status-delay"
+if(t.status==="incident"){statusClass="status-incident";incidentCount++}
+if(t.status==="boarding") statusClass="status-boarding"
 
 table.innerHTML+=`
 
 <tr>
-
-<td>${t.train}</td>
+<td>${t.id}</td>
 <td>${t.type}</td>
 <td>${t.dest}</td>
-<td>${t.heure}</td>
-<td>${t.voie}</td>
-<td class="${statusClass}">${statusText}</td>
-
-<td>
-<span class="delete" onclick="deleteTrain(${i})">Supprimer</span>
-</td>
-
+<td>${t.quai}</td>
+<td>${t.prev}</td>
+<td>${t.real}</td>
+<td class="${statusClass}">${t.status}</td>
+<td><button onclick="deleteTrain(${i})">Supprimer</button></td>
 </tr>
-
 `
 
 })
+
+document.getElementById("trainCount").innerText=trains.length
+document.getElementById("incidentCount").innerText=incidentCount
+
+}
+
+function sendMessage(){
+
+let msg=document.getElementById("messageAgent").value
+
+if(!msg) return
+
+let div=document.getElementById("messages")
+
+let time=new Date().toLocaleTimeString()
+
+div.innerHTML+="["+time+"] "+msg+"<br>"
+
+}
+
+function securityAlert(){
+
+incidents++
+
+log("🚨 Alerte sécurité déclenchée")
 
 }
 
@@ -349,11 +366,10 @@ function updateClock(){
 
 let now=new Date()
 
-let h=now.getHours().toString().padStart(2,"0")
-let m=now.getMinutes().toString().padStart(2,"0")
-let s=now.getSeconds().toString().padStart(2,"0")
-
-document.getElementById("clock").innerText=h+":"+m+":"+s
+document.getElementById("clock").innerText=
+now.getHours().toString().padStart(2,"0")+":"+
+now.getMinutes().toString().padStart(2,"0")+":"+
+now.getSeconds().toString().padStart(2,"0")
 
 }
 
