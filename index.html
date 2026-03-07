@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Poste de Commande - Gare Montparnasse</title>
+<title>Poste de Régulation - Gare Montparnasse</title>
 
 <style>
 
@@ -16,7 +16,7 @@ height:100vh;
 }
 
 .sidebar{
-width:300px;
+width:340px;
 background:#020617;
 padding:20px;
 overflow:auto;
@@ -32,18 +32,27 @@ h1,h2{
 margin-top:0;
 }
 
-.dashboard{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:10px;
-margin-bottom:20px;
+input,select{
+width:100%;
+padding:8px;
+margin-bottom:10px;
+border-radius:5px;
+border:none;
+background:#1e293b;
+color:white;
 }
 
-.card{
-background:#020617;
-padding:15px;
-border-radius:8px;
-text-align:center;
+button{
+padding:8px;
+border:none;
+border-radius:5px;
+background:#3b82f6;
+color:white;
+cursor:pointer;
+}
+
+button:hover{
+background:#2563eb;
 }
 
 table{
@@ -62,21 +71,8 @@ text-align:center;
 .status-ok{color:#22c55e;}
 .status-delay{color:#f59e0b;}
 .status-incident{color:#ef4444;}
-
-button{
-padding:8px;
-border:none;
-border-radius:5px;
-background:#3b82f6;
-color:white;
-cursor:pointer;
-}
-
-button:hover{
-background:#2563eb;
-}
-
-/* PLAN GARE */
+.status-boarding{color:#38bdf8;}
+.status-cancel{color:#9ca3af;}
 
 .station{
 display:grid;
@@ -88,37 +84,31 @@ margin-bottom:20px;
 .platform{
 background:#1e293b;
 padding:20px;
-text-align:center;
 border-radius:8px;
+text-align:center;
 }
 
 .occupied{
 background:#ef4444;
 }
 
-/* CAMERAS */
-
-.cameras{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:10px;
+.comm{
+background:#020617;
+padding:10px;
+height:180px;
+overflow:auto;
+font-size:13px;
+margin-bottom:20px;
 }
 
-.camera{
-background:black;
-height:120px;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:12px;
-color:#22c55e;
-}
+.msg-normal{color:#38bdf8;}
+.msg-urgent{color:#f59e0b;}
+.msg-critical{color:#ef4444;font-weight:bold;}
 
-.annonce{
+.announcement{
 background:#111827;
 padding:10px;
-margin-bottom:10px;
-font-size:14px;
+margin-bottom:20px;
 }
 
 </style>
@@ -128,46 +118,69 @@ font-size:14px;
 
 <div class="sidebar">
 
-<h2>Actions</h2>
+<h2>Gestion Train</h2>
 
-<button onclick="generateTrain()">Générer train</button>
-<button onclick="securityAlert()">🚨 Alerte sécurité</button>
+<input id="trainId" placeholder="Numéro train">
 
-<h2>Score</h2>
-<div id="score">0</div>
+<select id="type">
+<option>Départ</option>
+<option>Arrivée</option>
+</select>
 
-<h2>Dernière annonce</h2>
-<div id="annonceBox"></div>
+<input id="destination" placeholder="Destination / provenance">
+
+<select id="platform">
+<option>Q1</option>
+<option>Q2</option>
+<option>Q3</option>
+<option>Q4</option>
+</select>
+
+<label>Heure prévue</label>
+<input type="time" id="time">
+
+<select id="status">
+<option value="ok">À l'heure</option>
+<option value="delay">Retard</option>
+<option value="boarding">Embarquement</option>
+<option value="incident">Incident</option>
+<option value="cancel">Annulé</option>
+</select>
+
+<button onclick="addTrain()">Ajouter</button>
+<button onclick="saveEdit()">Enregistrer modification</button>
+
+<hr>
+
+<h2>Communication interne</h2>
+
+<select id="channel">
+<option>Agents de quai</option>
+<option>Sécurité</option>
+<option>Maintenance</option>
+<option>Information voyageurs</option>
+<option>Régulation ferroviaire</option>
+</select>
+
+<select id="priority">
+<option value="normal">Normal</option>
+<option value="urgent">Urgent</option>
+<option value="critical">Critique</option>
+</select>
+
+<input id="message" placeholder="Message">
+
+<button onclick="sendMessage()">Envoyer message</button>
 
 </div>
 
 <div class="main">
 
-<h1>Centre de contrôle - Paris Montparnasse</h1>
+<h1>Poste de régulation - Paris Montparnasse</h1>
 
-<div class="dashboard">
+<h2>Annonce voyageurs</h2>
 
-<div class="card">
-Trains
-<h2 id="trainCount">0</h2>
-</div>
-
-<div class="card">
-Incidents
-<h2 id="incidentCount">0</h2>
-</div>
-
-<div class="card">
-Score
-<h2 id="score2">0</h2>
-</div>
-
-<div class="card">
-Quais
-<h2>4</h2>
-</div>
-
-</div>
+<div id="announcement" class="announcement">Aucune annonce</div>
 
 <h2>Plan de la gare</h2>
 
@@ -191,67 +204,80 @@ Quais
 <th>Quai</th>
 <th>Heure</th>
 <th>Status</th>
+<th>Actions</th>
 </tr>
 
 </table>
 
-<h2>Caméras surveillance</h2>
+<h2>Communications</h2>
 
-<div class="cameras">
-
-<div class="camera">CAM 1 - Hall</div>
-<div class="camera">CAM 2 - Quai 1</div>
-<div class="camera">CAM 3 - Quai 2</div>
-<div class="camera">CAM 4 - Quai 3</div>
-<div class="camera">CAM 5 - Quai 4</div>
-<div class="camera">CAM 6 - Entrée</div>
-
-</div>
+<div id="communications" class="comm"></div>
 
 </div>
 
 <script>
 
 let trains=[]
-let score=0
-let incidents=0
+let editIndex=null
 
-const destinations=[
-"Bordeaux",
-"Rennes",
-"Nantes",
-"Lyon",
-"Lille",
-"Strasbourg",
-"Toulouse"
-]
-
-function generateTrain(){
-
-let quai="Q"+(Math.floor(Math.random()*4)+1)
+function addTrain(){
 
 let train={
-id:"TGV"+Math.floor(Math.random()*9000+1000),
-type:Math.random()>0.5?"Départ":"Arrivée",
-dest:destinations[Math.floor(Math.random()*destinations.length)],
-quai:quai,
-heure:new Date().toLocaleTimeString().slice(0,5),
-status:"ok"
-}
-
-let conflit=trains.find(t=>t.quai===quai)
-
-if(conflit){
-
-train.status="incident"
-incidents++
-score-=5
-
-annonce("⚠ Conflit de quai "+quai+" entre "+train.id+" et "+conflit.id)
-
+id:trainId.value,
+type:type.value,
+dest:destination.value,
+platform:platform.value,
+time:time.value,
+status:status.value
 }
 
 trains.push(train)
+
+announce("📢 Train "+train.id+" "+train.type+" "+train.dest+" voie "+train.platform)
+
+update()
+
+}
+
+function editTrain(i){
+
+let t=trains[i]
+
+trainId.value=t.id
+type.value=t.type
+destination.value=t.dest
+platform.value=t.platform
+time.value=t.time
+status.value=t.status
+
+editIndex=i
+
+}
+
+function saveEdit(){
+
+if(editIndex===null) return
+
+trains[editIndex]={
+id:trainId.value,
+type:type.value,
+dest:destination.value,
+platform:platform.value,
+time:time.value,
+status:status.value
+}
+
+announce("✏ Train "+trainId.value+" modifié")
+
+editIndex=null
+
+update()
+
+}
+
+function deleteTrain(i){
+
+trains.splice(i,1)
 
 update()
 
@@ -269,6 +295,7 @@ table.innerHTML=`
 <th>Quai</th>
 <th>Heure</th>
 <th>Status</th>
+<th>Actions</th>
 </tr>
 `
 
@@ -277,11 +304,14 @@ p.classList.remove("occupied")
 p.innerText=p.id.replace("Q","Quai ")
 })
 
-trains.forEach(t=>{
+trains.forEach((t,i)=>{
 
 let statusClass="status-ok"
 
+if(t.status==="delay") statusClass="status-delay"
 if(t.status==="incident") statusClass="status-incident"
+if(t.status==="boarding") statusClass="status-boarding"
+if(t.status==="cancel") statusClass="status-cancel"
 
 table.innerHTML+=`
 
@@ -289,58 +319,48 @@ table.innerHTML+=`
 <td>${t.id}</td>
 <td>${t.type}</td>
 <td>${t.dest}</td>
-<td>${t.quai}</td>
-<td>${t.heure}</td>
+<td>${t.platform}</td>
+<td>${t.time}</td>
 <td class="${statusClass}">${t.status}</td>
-</tr>
 
+<td>
+<button onclick="editTrain(${i})">Modifier</button>
+<button onclick="deleteTrain(${i})">Supprimer</button>
+</td>
+
+</tr>
 `
 
-let quaiDiv=document.getElementById(t.quai)
+let quai=document.getElementById(t.platform)
 
-quaiDiv.classList.add("occupied")
-quaiDiv.innerText=t.quai+" - "+t.id
+quai.classList.add("occupied")
+quai.innerText=t.platform+" - "+t.id
 
 })
 
-document.getElementById("trainCount").innerText=trains.length
-document.getElementById("incidentCount").innerText=incidents
-document.getElementById("score").innerText=score
-document.getElementById("score2").innerText=score
+}
+
+function sendMessage(){
+
+let time=new Date().toLocaleTimeString()
+
+let channel=document.getElementById("channel").value
+let pr=document.getElementById("priority").value
+let msg=document.getElementById("message").value
+
+let div=document.getElementById("communications")
+
+div.innerHTML+=`<div class="msg-${pr}">[${time}] (${channel}) : ${msg}</div>`
+
+div.scrollTop=div.scrollHeight
 
 }
 
-function annonce(text){
+function announce(text){
 
-document.getElementById("annonceBox").innerHTML=
-'<div class="annonce">'+text+'</div>'
-
-}
-
-function securityAlert(){
-
-incidents++
-score-=10
-
-annonce("🚨 Alerte sécurité en gare. Intervention demandée.")
-
-update()
+document.getElementById("announcement").innerText=text
 
 }
-
-setInterval(()=>{
-
-if(Math.random()>0.6){
-
-generateTrain()
-
-score+=2
-
-annonce("📢 Train en approche. Vérifiez l'attribution des quais.")
-
-}
-
-},8000)
 
 </script>
 
