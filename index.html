@@ -13,18 +13,10 @@ button{padding:8px;border:none;border-radius:5px;background:#3b82f6;color:white;
 button:hover{background:#2563eb;}
 table{width:100%;border-collapse:collapse;background:#020617;margin-bottom:20px;}
 th,td{padding:10px;border-bottom:1px solid #1e293b;text-align:center;}
-.status-ok{color:#22c55e;}
-.status-delay{color:#f59e0b;}
-.status-incident{color:#ef4444;}
-.status-boarding{color:#38bdf8;}
-.status-cancel{color:#9ca3af;}
 .station{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
 .platform{background:#1e293b;padding:20px;border-radius:8px;text-align:center;}
 .occupied{background:#ef4444;}
 .comm{background:#020617;padding:10px;height:180px;overflow:auto;font-size:13px;margin-bottom:20px;}
-.msg-normal{color:#38bdf8;}
-.msg-urgent{color:#f59e0b;}
-.msg-critical{color:#ef4444;font-weight:bold;}
 .announcement{background:#111827;padding:10px;margin-bottom:20px;}
 </style>
 </head>
@@ -46,13 +38,8 @@ th,td{padding:10px;border-bottom:1px solid #1e293b;text-align:center;}
 </select>
 <label>Heure prévue</label>
 <input type="time" id="time">
-<select id="status">
-<option value="ok">À l'heure</option>
-<option value="delay">Retard</option>
-<option value="boarding">Embarquement</option>
-<option value="incident">Incident</option>
-<option value="cancel">Annulé</option>
-</select>
+<!-- Statut texte libre -->
+<input type="text" id="status" placeholder="Statut (ex : À l'heure, Retard)">
 <button onclick="addTrain()">Ajouter</button>
 <button onclick="saveEdit()">Enregistrer modification</button>
 <hr>
@@ -99,6 +86,7 @@ th,td{padding:10px;border-bottom:1px solid #1e293b;text-align:center;}
 <audio id="trainAudio">
 <source src="https://www.soundjay.com/train/train-horn-01.mp3" type="audio/mpeg">
 </audio>
+
 </div>
 
 <script>
@@ -113,8 +101,8 @@ platform:platform.value,
 time:time.value,
 status:status.value
 }
+// Conflit de quai : on garde l'incident mais le statut reste ce que tu écris
 if(trains.find(t=>t.platform===train.platform)){
-train.status="incident"
 announce("⚠ Conflit sur "+train.platform+" avec "+trains.find(t=>t.platform===train.platform).id)
 }
 trains.push(train)
@@ -165,18 +153,10 @@ p.classList.remove("occupied")
 p.innerText=p.id.replace("Q","Quai ")
 })
 trains.forEach((t,i)=>{
-let statusClass="", statusText=""
-switch(t.status){
-case "ok": statusClass="status-ok"; statusText="À l'heure"; break;
-case "delay": statusClass="status-delay"; statusText="Retard"; break;
-case "boarding": statusClass="status-boarding"; statusText="Embarquement"; break;
-case "incident": statusClass="status-incident"; statusText="Incident"; break;
-case "cancel": statusClass="status-cancel"; statusText="Annulé"; break;
-default: statusClass=""; statusText=t.status;
-}
+let statusText=t.status; // on affiche exactement ce que l'utilisateur a écrit
 table.innerHTML+=`<tr>
 <td>${t.id}</td><td>${t.type}</td><td>${t.dest}</td><td>${t.platform}</td><td>${t.time}</td>
-<td class="${statusClass}">${statusText}</td>
+<td>${statusText}</td>
 <td>
 <button onclick="editTrain(${i})">Modifier</button>
 <button onclick="deleteTrain(${i})">Supprimer</button>
