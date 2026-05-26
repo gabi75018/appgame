@@ -1,278 +1,332 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>Poste de régulation - Gare Montparnasse</title>
-<style>
-body{margin:0;font-family:Segoe UI,system-ui,-apple-system,sans-serif;background:#0b1120;color:white;display:flex;height:100vh;}
-.sidebar{width:340px;background:#020617;padding:20px;overflow:auto;border-right:1px solid #1e293b;}
-.main{flex:1;padding:20px;overflow:auto;}
-h1,h2{margin-top:0;}
-input,select{width:100%;padding:8px;margin-bottom:10px;border-radius:5px;border:1px solid #1f2937;background:#020617;color:white;}
-input:focus,select:focus{outline:none;border-color:#3b82f6;box-shadow:0 0 0 1px #3b82f6;}
-button{padding:8px 10px;border:none;border-radius:5px;background:#3b82f6;color:white;cursor:pointer;margin-bottom:5px;font-size:13px;}
-button:hover{background:#2563eb;}
-button.danger{background:#ef4444;}
-button.danger:hover{background:#b91c1c;}
-table{width:100%;border-collapse:collapse;background:#020617;margin-bottom:20px;border-radius:8px;overflow:hidden;}
-th,td{padding:10px;border-bottom:1px solid #1e293b;text-align:center;font-size:14px;}
-th{background:#020617;}
-.station{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
-.platform{background:#1e293b;padding:20px;border-radius:8px;text-align:center;transition:background .2s,transform .1s;}
-.platform.occupied{background:#ef4444;}
-.platform.occupied strong{display:block;margin-top:5px;font-size:13px;}
-.comm{background:#020617;padding:10px;height:200px;overflow:auto;font-size:13px;margin-bottom:20px;border-radius:8px;border:1px solid #1e293b;}
-.announcement{background:#111827;padding:10px;margin-bottom:20px;border-radius:8px;border:1px solid #1e293b;font-size:14px;}
-.status-badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:12px;}
-.status-on-time{background:#16a34a33;color:#4ade80;}
-.status-delay{background:#f9731633;color:#fdba74;}
-.status-cancelled{background:#ef444433;color:#fecaca;}
-.status-other{background:#4b556333;color:#e5e7eb;}
-.msg-normal{color:#e5e7eb;margin-bottom:4px;}
-.msg-urgent{color:#fbbf24;margin-bottom:4px;}
-.msg-critical{color:#f87171;font-weight:600;margin-bottom:4px;}
-.msg-critical::before{content:"⚠ ";}
+    <meta charset="UTF-8">
+    <title>CoasterControl Pro v1.0 - Panel de Gestion</title>
+    <style>
+        :root {
+            --panel-bg: #2c3e50;
+            --btn-red: #c0392b;
+            --btn-green: #27ae60;
+            --btn-yellow: #f1c40f;
+            --lcd-bg: #1a1a1a;
+            --lcd-text: #00ff00;
+        }
 
-/* Ligne survolée */
-tbody tr:hover{background:#020617;}
-</style>
+        body {
+            background-color: #121212;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Zone de Visualisation --- */
+        #track-visualizer {
+            flex: 1;
+            background: #1e1e1e;
+            position: relative;
+            border-bottom: 4px solid #444;
+            padding: 20px;
+        }
+
+        .track-line {
+            position: absolute;
+            top: 50%;
+            left: 5%;
+            right: 5%;
+            height: 10px;
+            background: #555;
+            border-radius: 5px;
+            transform: translateY(-50%);
+        }
+
+        .block-zone {
+            position: absolute;
+            top: 40%;
+            height: 30px;
+            border-left: 2px dashed #888;
+            padding-left: 5px;
+            font-size: 10px;
+            color: #888;
+        }
+
+        .train {
+            position: absolute;
+            top: 50%;
+            width: 60px;
+            height: 25px;
+            background: #3498db;
+            border: 2px solid white;
+            border-radius: 5px;
+            transform: translateY(-50%);
+            transition: left 0.1s linear;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            z-index: 10;
+        }
+
+        /* --- Panel de Contrôle --- */
+        #control-panel {
+            height: 400px;
+            background: var(--panel-bg);
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+        }
+
+        .panel-section {
+            background: rgba(0,0,0,0.2);
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        h2 { margin: 0 0 10px 0; font-size: 14px; text-transform: uppercase; color: #bdc3c7; }
+
+        /* --- Éléments d'interface --- */
+        .lcd-display {
+            background: var(--lcd-bg);
+            color: var(--lcd-text);
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            border-radius: 4px;
+            border: 2px inset #444;
+            height: 80px;
+            overflow-y: auto;
+            font-size: 13px;
+        }
+
+        .grid-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 15px 10px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: filter 0.2s;
+        }
+
+        .btn:active { filter: brightness(0.8); }
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        .btn-dispatch { background: var(--btn-green); color: white; grid-column: span 2; height: 60px; font-size: 18px; }
+        .btn-stop { background: var(--btn-red); color: white; height: 80px; font-size: 20px; }
+        .btn-toggle { background: #7f8c8d; color: white; }
+        .btn-toggle.active { background: var(--btn-yellow); color: black; }
+
+        .status-light {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #333;
+            display: inline-block;
+            margin-right: 5px;
+        }
+        .light-on { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
+        .light-off { background: #aa0000; }
+
+    </style>
 </head>
 <body>
 
-<div class="sidebar">
-<h2>Gestion Train</h2>
-<input id="trainId" placeholder="Numéro train">
-<select id="type">
-<option>Départ</option>
-<option>Arrivée</option>
-</select>
-<input id="destination" placeholder="Destination / provenance">
-<select id="platform">
-<option>Q1</option>
-<option>Q2</option>
-<option>Q3</option>
-<option>Q4</option>
-</select>
-<label>Heure prévue</label>
-<input type="time" id="time">
-<!-- Statut texte libre -->
-<input type="text" id="statusInput" placeholder="Statut (ex : À l'heure, Retard, Supprimé)">
-<button id="addBtn">Ajouter</button>
-<button id="saveBtn">Enregistrer modification</button>
-<hr>
-<h2>Communication interne</h2>
-<select id="channel">
-<option>Agents de quai</option>
-<option>Sécurité</option>
-<option>Maintenance</option>
-<option>Information voyageurs</option>
-<option>Régulation ferroviaire</option>
-</select>
-<select id="priority">
-<option value="normal">Normal</option>
-<option value="urgent">Urgent</option>
-<option value="critical">Critique</option>
-</select>
-<input id="message" placeholder="Message">
-<button id="sendMsgBtn">Envoyer message</button>
-</div>
+    <div id="track-visualizer">
+        <div class="track-line"></div>
+        
+        <div class="block-zone" style="left: 5%; width: 20%;">STATION</div>
+        <div class="block-zone" style="left: 25%; width: 15%;">LIFT HILL</div>
+        <div class="block-zone" style="left: 40%; width: 40%;">MAIN COURSE</div>
+        <div class="block-zone" style="left: 80%; width: 15%;">BRAKE RUN</div>
 
-<div class="main">
-<h1>Poste de régulation - Paris Montparnasse</h1>
-<h2>Annonce voyageurs</h2>
-<div id="announcement" class="announcement">Aucune annonce</div>
+        <div id="train1" class="train" style="background: #e74c3c;">T1</div>
+        <div id="train2" class="train" style="background: #3498db;">T2</div>
+        <div id="train3" class="train" style="background: #f1c40f; color: black;">T3</div>
+    </div>
 
-<h2>Plan de la gare</h2>
-<div class="station">
-<div id="Q1" class="platform">Quai 1</div>
-<div id="Q2" class="platform">Quai 2</div>
-<div id="Q3" class="platform">Quai 3</div>
-<div id="Q4" class="platform">Quai 4</div>
-</div>
+    <div id="control-panel">
+        <div class="panel-section">
+            <h2>Sécurité Globale</h2>
+            <button class="btn btn-stop" onclick="triggerEStop()">E-STOP (Arrêt Urgence)</button>
+            <div class="lcd-display" id="log-display">
+                SYSTEM READY...<br>
+                ALL BLOCKS CLEAR.
+            </div>
+            <button class="btn btn-toggle" onclick="toggleAudio()">🔊 Annonce Station</button>
+        </div>
 
-<h2>Tableau ferroviaire</h2>
-<table id="table">
-<thead>
-<tr>
-<th>Train</th><th>Type</th><th>Destination</th><th>Quai</th><th>Heure</th><th>Status</th><th>Actions</th>
-</tr>
-</thead>
-<tbody id="tableBody"></tbody>
-</table>
+        <div class="panel-section">
+            <h2>Contrôle Station</h2>
+            <div style="display: flex; justify-content: space-around; margin-bottom: 10px;">
+                <div><div id="light-gates" class="status-light"></div> Portillons</div>
+                <div><div id="light-harness" class="status-light"></div> Harnais</div>
+            </div>
+            <div class="grid-buttons">
+                <button id="btn-gates" class="btn btn-toggle" onclick="toggleGates()">Ouvrir Portillons</button>
+                <button id="btn-harness" class="btn btn-toggle" onclick="toggleHarness()">Ouvrir Harnais</button>
+                <button id="btn-dispatch" class="btn btn-dispatch" onclick="dispatchTrain()" disabled>DISPATCH</button>
+            </div>
+        </div>
 
-<h2>Communications</h2>
-<div id="communications" class="comm"></div>
-
-<audio id="trainAudio">
-<source src="https://www.soundjay.com/train/train-horn-01.mp3" type="audio/mpeg">
-</audio>
-
-</div>
+        <div class="panel-section">
+            <h2>Statut du Circuit</h2>
+            <div id="block-status" style="font-size: 12px; line-height: 2;">
+                STATION: <span id="s-stat" style="color:red">OCCUPÉ</span><br>
+                LIFT: <span id="l-stat">LIBRE</span><br>
+                MAIN: <span id="m-stat">LIBRE</span><br>
+                BRAKES: <span id="b-stat">LIBRE</span>
+            </div>
+            <hr width="100%">
+            <div style="font-size: 11px;">
+                Vitesse : <span id="speed-val">0</span> km/h<br>
+                Mode : <span style="color: var(--btn-yellow)">MANUEL</span>
+            </div>
+        </div>
+    </div>
 
 <script>
-let trains = [];
-let editIndex = null;
+    // --- Configuration ---
+    const trains = [
+        { id: 'train1', pos: 7, status: 'station', speed: 0 },
+        { id: 'train2', pos: 82, status: 'moving', speed: 0 },
+        { id: 'train3', pos: 45, status: 'moving', speed: 0 }
+    ];
 
-// Raccourcis vers les éléments (plus de globals implicites chelous)
-const trainIdInput   = document.getElementById("trainId");
-const typeSelect     = document.getElementById("type");
-const destInput      = document.getElementById("destination");
-const platformSelect = document.getElementById("platform");
-const timeInput      = document.getElementById("time");
-const statusInput    = document.getElementById("statusInput");
-const tableBody      = document.getElementById("tableBody");
-const announcementEl = document.getElementById("announcement");
-const commDiv        = document.getElementById("communications");
-const audioEl        = document.getElementById("trainAudio");
+    let systemActive = true;
+    let gatesOpen = false;
+    let harnessOpen = false;
+    let blocks = { station: true, lift: false, main: true, brakes: true };
 
-// Boutons
-document.getElementById("addBtn").onclick    = addTrain;
-document.getElementById("saveBtn").onclick   = saveEdit;
-document.getElementById("sendMsgBtn").onclick= sendMessage;
+    // --- Logique de Simulation ---
+    function update() {
+        if (!systemActive) return;
 
-function getStatusClass(text){
-  if(!text) return "status-other";
-  const t = text.toLowerCase();
-  if(t.includes("heure")) return "status-on-time";
-  if(t.includes("retard")) return "status-delay";
-  if(t.includes("supprim")) return "status-cancelled";
-  return "status-other";
-}
+        trains.forEach(t => {
+            const el = document.getElementById(t.id);
+            
+            // Logique de mouvement simplifiée par zones
+            if (t.status === 'moving') {
+                let nextPos = t.pos + 0.2;
 
-function addTrain(){
-  const train = {
-    id: trainIdInput.value.trim(),
-    type: typeSelect.value,
-    dest: destInput.value.trim(),
-    platform: platformSelect.value,
-    time: timeInput.value,
-    status: statusInput.value.trim()
-  };
+                // Gestion des collisions (Système de blocs)
+                if (nextPos >= 25 && nextPos < 26 && blocks.lift) t.speed = 0; // Stop avant lift
+                else if (nextPos >= 40 && nextPos < 41 && blocks.main) t.speed = 0; // Stop avant main
+                else if (nextPos >= 80 && nextPos < 81 && blocks.brakes) t.speed = 0; // Stop avant brakes
+                else if (nextPos >= 95) { // Boucle vers la station
+                    if (blocks.station) {
+                        t.speed = 0;
+                        t.pos = 94.5;
+                    } else {
+                        t.pos = 5;
+                        t.status = 'station';
+                        log("Train en gare.");
+                    }
+                } else {
+                    t.pos = nextPos;
+                    t.speed = 45;
+                }
+            }
+            
+            el.style.left = t.pos + "%";
+        });
 
-  if(!train.id || !train.dest || !train.time){
-    announce("⚠ Merci de remplir au minimum : numéro, destination et heure.");
-    return;
-  }
-
-  const conflict = trains.find(t => t.platform === train.platform);
-  if(conflict){
-    announce("⚠ Conflit sur " + train.platform + " avec " + conflict.id);
-  }
-
-  trains.push(train);
-  announce("📢 Train " + train.id + " " + train.type + " " + train.dest + " voie " + train.platform);
-  playAudio();
-  clearForm();
-  update();
-}
-
-function editTrain(i){
-  const t = trains[i];
-  trainIdInput.value   = t.id;
-  typeSelect.value     = t.type;
-  destInput.value      = t.dest;
-  platformSelect.value = t.platform;
-  timeInput.value      = t.time;
-  statusInput.value    = t.status;
-  editIndex = i;
-}
-
-function saveEdit(){
-  if(editIndex === null) return;
-
-  trains[editIndex] = {
-    id: trainIdInput.value.trim(),
-    type: typeSelect.value,
-    dest: destInput.value.trim(),
-    platform: platformSelect.value,
-    time: timeInput.value,
-    status: statusInput.value.trim()
-  };
-
-  announce("✏ Train " + trainIdInput.value + " modifié");
-  playAudio();
-  editIndex = null;
-  clearForm();
-  update();
-}
-
-function deleteTrain(i){
-  const removed = trains[i];
-  trains.splice(i,1);
-  announce("🗑 Train " + removed.id + " supprimé du tableau");
-  update();
-}
-
-function clearForm(){
-  trainIdInput.value = "";
-  destInput.value = "";
-  timeInput.value = "";
-  statusInput.value = "";
-  // on ne reset pas type / quai pour aller vite
-}
-
-function update(){
-  tableBody.innerHTML = "";
-
-  // reset quais
-  document.querySelectorAll(".platform").forEach(p=>{
-    p.classList.remove("occupied");
-    p.innerHTML = p.id.replace("Q","Quai ");
-  });
-
-  trains.forEach((t,i)=>{
-    const tr = document.createElement("tr");
-
-    const statusClass = getStatusClass(t.status);
-    const statusHtml = `<span class="status-badge ${statusClass}">${t.status || "—"}</span>`;
-
-    tr.innerHTML = `
-      <td>${t.id}</td>
-      <td>${t.type}</td>
-      <td>${t.dest}</td>
-      <td>${t.platform}</td>
-      <td>${t.time}</td>
-      <td>${statusHtml}</td>
-      <td>
-        <button onclick="editTrain(${i})">Modifier</button>
-        <button class="danger" onclick="deleteTrain(${i})">Supprimer</button>
-      </td>
-    `;
-    tableBody.appendChild(tr);
-
-    const quai = document.getElementById(t.platform);
-    if(quai){
-      quai.classList.add("occupied");
-      quai.innerHTML = `Quai ${t.platform.replace("Q","")}<strong>${t.id} – ${t.dest}</strong>`;
+        updateBlockStatus();
+        checkDispatchReady();
+        document.getElementById('speed-val').innerText = trains[0].status === 'station' ? 0 : 72;
     }
-  });
-}
 
-function sendMessage(){
-  const time = new Date().toLocaleTimeString();
-  const channel = document.getElementById("channel").value;
-  const pr = document.getElementById("priority").value;
-  const msg = document.getElementById("message").value.trim();
-  if(!msg) return;
+    function updateBlockStatus() {
+        // Détermine quel bloc est occupé
+        let b = { station: false, lift: false, main: false, brakes: false };
+        trains.forEach(t => {
+            if (t.pos < 25) b.station = true;
+            else if (t.pos < 40) b.lift = true;
+            else if (t.pos < 80) b.main = true;
+            else b.brakes = true;
+        });
+        blocks = b;
 
-  const cls = "msg-" + pr;
-  commDiv.innerHTML += `<div class="${cls}">[${time}] (${channel}) : ${msg}</div>`;
-  commDiv.scrollTop = commDiv.scrollHeight;
-  document.getElementById("message").value = "";
-}
+        document.getElementById('s-stat').innerText = b.station ? "OCCUPÉ" : "LIBRE";
+        document.getElementById('s-stat').style.color = b.station ? "red" : "lime";
+        document.getElementById('l-stat').innerText = b.lift ? "OCCUPÉ" : "LIBRE";
+        document.getElementById('l-stat').style.color = b.lift ? "red" : "lime";
+        document.getElementById('m-stat').innerText = b.main ? "OCCUPÉ" : "LIBRE";
+        document.getElementById('m-stat').style.color = b.main ? "red" : "lime";
+        document.getElementById('b-stat').innerText = b.brakes ? "OCCUPÉ" : "LIBRE";
+        document.getElementById('b-stat').style.color = b.brakes ? "red" : "lime";
+    }
 
-function announce(text){
-  announcementEl.innerText = text;
-}
+    // --- Commandes ---
+    function toggleGates() {
+        if (!systemActive) return;
+        gatesOpen = !gatesOpen;
+        document.getElementById('btn-gates').classList.toggle('active');
+        document.getElementById('light-gates').classList.toggle('light-on');
+        log(gatesOpen ? "Portillons ouverts" : "Portillons fermés");
+    }
 
-function playAudio(){
-  audioEl.currentTime = 0;
-  audioEl.play();
-}
+    function toggleHarness() {
+        if (!systemActive) return;
+        if (gatesOpen) {
+            log("ERREUR : Fermez les portillons d'abord !");
+            return;
+        }
+        harnessOpen = !harnessOpen;
+        document.getElementById('btn-harness').classList.toggle('active');
+        document.getElementById('light-harness').classList.toggle('light-on');
+        log(harnessOpen ? "Harnais déverrouillés" : "Harnais verrouillés");
+    }
 
-// Expose quelques fonctions pour les boutons inline
-window.editTrain = editTrain;
-window.deleteTrain = deleteTrain;
+    function checkDispatchReady() {
+        const canDispatch = !gatesOpen && !harnessOpen && !blocks.lift && systemActive;
+        document.getElementById('btn-dispatch').disabled = !canDispatch;
+    }
+
+    function dispatchTrain() {
+        const trainInStation = trains.find(t => t.status === 'station');
+        if (trainInStation) {
+            trainInStation.status = 'moving';
+            trainInStation.pos = 6;
+            log("DISPATCH : Train en route vers le Lift.");
+        }
+    }
+
+    function triggerEStop() {
+        systemActive = !systemActive;
+        const color = systemActive ? "var(--btn-red)" : "#ff0000";
+        document.body.style.boxShadow = systemActive ? "none" : "inset 0 0 100px red";
+        log(systemActive ? "SYSTÈME RÉINITIALISÉ" : "!!! ARRÊT D'URGENCE ACTIVÉ !!!");
+    }
+
+    function log(msg) {
+        const display = document.getElementById('log-display');
+        display.innerHTML += `<br>> ${msg}`;
+        display.scrollTop = display.scrollHeight;
+    }
+
+    function toggleAudio() {
+        log("Annonce : 'Restez assis, gardez les mains à l'intérieur...'");
+    }
+
+    // Boucle de rendu
+    setInterval(update, 50);
+
 </script>
 </body>
 </html>
