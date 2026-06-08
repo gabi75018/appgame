@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LudoApp - Mon Tableau de Bord</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --primary-blue: #38bdf8;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --accent-green: #10b981;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 520px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 45px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .dashboard-box {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary { background-color: var(--primary-blue); color: #0f172a; }
+        .btn-primary:hover { background-color: #0ea5e9; transform: translateY(-1px); }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            margin-top: 25px;
+        }
+        .btn-secondary:hover { background: rgba(239, 68, 68, 0.1); }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            background: var(--accent-green);
+            color: white;
+        }
+        .badge.visitor { background: #f59e0b; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <h2 style="font-size: 1.4rem; font-weight: 600;">Salut, <span id="user-display">Joueur</span> ! 👋</h2>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Bienvenue sur votre espace de jeu</p>
+            </div>
+            <span id="badge-status" class="badge">Compte Cloud</span>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <div class="dashboard-box" style="flex: 1; margin: 0; text-align: center; padding: 15px;">
+                <span style="font-size: 1.5rem;">🎲</span>
+                <h3 style="font-size: 0.9rem; margin-top: 5px; color: var(--text-muted);">0 Jeux</h3>
+            </div>
+            <div class="dashboard-box" style="flex: 1; margin: 0; text-align: center; padding: 15px;">
+                <span style="font-size: 1.5rem;">🏆</span>
+                <h3 style="font-size: 0.9rem; margin-top: 5px; color: var(--text-muted);">0 Parties</h3>
+            </div>
+        </div>
+
+        <div class="dashboard-box" style="margin-top: 0;">
+            <p style="font-size: 0.95rem; margin-bottom: 15px; font-weight: 600;">Que voulez-vous faire aujourd'hui ?</p>
+            <button class="btn btn-primary" style="margin-bottom: 10px;" onclick="alert('Ajout de jeu bientôt disponible !')">
+                ➕ Ajouter un jeu à mon étagère
+            </button>
+            <button class="btn btn-primary" style="background-color: #818cf8; color: white;" onclick="alert('Partie bientôt disponible !')">
+                ⏱️ Lancer une partie
+            </button>
+        </div>
+
+        <button class="btn btn-secondary" onclick="logout()">Se déconnecter</button>
+    </div>
+
+    <script>
+        // CONFIGURATION SUPABASE (Mettez vos vrais identifiants ici aussi)
+        const SUPABASE_URL = "https://kqrecawkgulnkiuezrui.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_g9cK2XcmWh3gWTm1Z9ViyQ_34-YeZOI";
+        
+        let supabaseClient = null;
+        let useMock = true;
+
+        if (typeof supabase !== 'undefined') {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            useMock = false;
+        }
+
+        // SÉCURITÉ : Vérifier si l'utilisateur a le droit d'être ici
+        window.onload = function() {
+            const currentSession = localStorage.getItem('ludo_session');
+            
+            if (!currentSession) {
+                // Pas de session ? On rejette le pirate vers la page de connexion
+                alert("Accès refusé. Veuillez vous connecter d'abord.");
+                window.location.href = "index.html";
+                return;
+            }
+
+            const sessionData = JSON.parse(currentSession);
+            document.getElementById('user-display').innerText = sessionData.email;
+
+            if (sessionData.isVisitor) {
+                const badge = document.getElementById('badge-status');
+                badge.innerText = "Mode Visiteur";
+                badge.className = "badge visitor";
+            }
+        };
+
+        // GESTION DE LA DÉCONNEXION
+        async function logout() {
+            localStorage.removeItem('ludo_session');
+            if (!useMock && supabaseClient) {
+                await supabaseClient.auth.signOut();
+            }
+            // On renvoie vers l'écran de connexion
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
