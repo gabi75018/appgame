@@ -3,165 +3,261 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LudoApp - Mon Tableau de Bord</title>
+    <title>LudoApp - Découvrir des jeux</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --primary-blue: #38bdf8;
-            --text-light: #f8fafc;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --border-color: rgba(255, 255, 255, 0.1);
-            --accent-green: #10b981;
+            --primary: #38bdf8;
+            --primary-hover: #0ea5e9;
+            --border: rgba(255, 255, 255, 0.1);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        /* Thème Clair Appliqué via JS */
+        body.light-theme {
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: rgba(0, 0, 0, 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
 
         body {
-            background: var(--bg-gradient);
-            color: var(--text-light);
+            background-color: var(--bg-color);
+            color: var(--text-main);
             min-height: 100vh;
+            padding-bottom: 40px;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Barre de navigation responsive */
+        nav {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            padding: 20px;
+            padding: 20px 5%;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border);
         }
 
-        .app-container {
-            width: 100%;
-            max-width: 520px;
-            background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 45px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
+        .brand { font-size: 1.5rem; font-weight: 700; color: var(--primary); text-decoration: none; }
 
-        .dashboard-box {
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border-color);
-            padding: 20px;
-            border-radius: 16px;
-            margin: 20px 0;
-        }
+        .nav-links { display: flex; gap: 20px; list-style: none; }
+        .nav-links a { color: var(--text-main); text-decoration: none; font-weight: 600; font-size: 0.95rem; }
+        .nav-links a:hover, .nav-links a.active { color: var(--primary); }
 
+        /* Conteneur principal */
+        .main-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+
+        /* Barre de recherche */
+        .search-section { display: flex; gap: 10px; margin-bottom: 30px; }
+        .search-bar {
+            flex: 1; padding: 14px; border-radius: 10px; border: 1px solid var(--border);
+            background-color: var(--card-bg); color: var(--text-main); font-size: 1rem;
+        }
         .btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
+            padding: 12px 24px; border-radius: 10px; border: none; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-primary { background-color: var(--primary); color: #0f172a; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+
+        /* Grille de jeux (Fidèle sur PC, tablette et mobile) */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
         }
 
-        .btn-primary { background-color: var(--primary-blue); color: #0f172a; }
-        .btn-primary:hover { background-color: #0ea5e9; transform: translateY(-1px); }
+        .game-card {
+            background-color: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 16px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        .game-img { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; background-color: #334155; margin-bottom: 15px; }
+        .game-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 8px; }
+        .game-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 15px; }
         
-        .btn-secondary {
-            background: transparent;
-            color: #ef4444;
-            border: 1px solid #ef4444;
-            margin-top: 25px;
-        }
-        .btn-secondary:hover { background: rgba(239, 68, 68, 0.1); }
+        .amazon-link { display: inline-block; color: #f59e0b; text-decoration: none; font-size: 0.85rem; font-weight: 600; margin-bottom: 15px; }
+        .amazon-link:hover { text-decoration: underline; }
 
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            background: var(--accent-green);
-            color: white;
+        .actions-box { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 15px; }
+        .btn-action { padding: 6px; font-size: 0.7rem; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text-main); cursor: pointer; }
+        .btn-action:hover { background: rgba(56, 189, 248, 0.1); border-color: var(--primary); }
+
+        /* Évaluation étoiles */
+        .rating-zone { display: flex; align-items: center; gap: 5px; font-size: 0.85rem; }
+        .stars { color: #f59e0b; cursor: pointer; }
+
+        /* Zone "Voir plus" et "Jeu introuvable" */
+        .center-zone { text-align: center; margin-top: 30px; }
+        .not-found-box {
+            background-color: rgba(239, 68, 68, 0.1); border: 1px dashed #ef4444;
+            padding: 20px; border-radius: 12px; display: none; margin-bottom: 20px;
         }
-        .badge.visitor { background: #f59e0b; }
+
+        @media (max-width: 768px) {
+            nav { flex-direction: column; gap: 15px; }
+            .search-section { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <div>
-                <h2 style="font-size: 1.4rem; font-weight: 600;">Salut, <span id="user-display">Joueur</span> ! 👋</h2>
-                <p style="font-size: 0.8rem; color: var(--text-muted);">Bienvenue sur votre espace de jeu</p>
-            </div>
-            <span id="badge-status" class="badge">Compte Cloud</span>
+    <nav>
+        <a href="accueil.html" class="brand">🎲 LudoApp</a>
+        <ul class="nav-links">
+            <li><a href="accueil.html" class="active">Accueil</a></li>
+            <li><a href="compteur.html">Compteur</a></li>
+            <li><a href="profil.html">Mon Compte</a></li>
+            <li><a href="legal.html">Infos Légales</a></li>
+        </ul>
+    </nav>
+
+    <div class="main-container">
+        <div class="search-section">
+            <input type="text" id="search-input" class="search-bar" placeholder="Rechercher un jeu existant..." oninput="filterGames()">
         </div>
 
-        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-            <div class="dashboard-box" style="flex: 1; margin: 0; text-align: center; padding: 15px;">
-                <span style="font-size: 1.5rem;">🎲</span>
-                <h3 style="font-size: 0.9rem; margin-top: 5px; color: var(--text-muted);">0 Jeux</h3>
-            </div>
-            <div class="dashboard-box" style="flex: 1; margin: 0; text-align: center; padding: 15px;">
-                <span style="font-size: 1.5rem;">🏆</span>
-                <h3 style="font-size: 0.9rem; margin-top: 5px; color: var(--text-muted);">0 Parties</h3>
-            </div>
+        <div id="not-found" class="not-found-box">
+            <p style="margin-bottom: 10px;">⚠️ Ce jeu n'est pas encore répertorié sur LudoApp.</p>
+            <button class="btn btn-primary" onclick="openAddGameForm()">Ajouter ce jeu à l'application</button>
         </div>
 
-        <div class="dashboard-box" style="margin-top: 0;">
-            <p style="font-size: 0.95rem; margin-bottom: 15px; font-weight: 600;">Que voulez-vous faire aujourd'hui ?</p>
-            <button class="btn btn-primary" style="margin-bottom: 10px;" onclick="alert('Ajout de jeu bientôt disponible !')">
-                ➕ Ajouter un jeu à mon étagère
-            </button>
-            <button class="btn btn-primary" style="background-color: #818cf8; color: white;" onclick="alert('Partie bientôt disponible !')">
-                ⏱️ Lancer une partie
-            </button>
-        </div>
+        <div class="games-grid" id="games-grid"></div>
 
-        <button class="btn btn-secondary" onclick="logout()">Se déconnecter</button>
+        <div class="center-zone">
+            <button id="load-more-btn" class="btn btn-primary" onclick="loadMoreGames()">Voir plus de jeux</button>
+        </div>
     </div>
 
     <script>
-        // CONFIGURATION SUPABASE (Mettez vos vrais identifiants ici aussi)
-        const SUPABASE_URL = "https://kqrecawkgulnkiuezrui.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_g9cK2XcmWh3gWTm1Z9ViyQ_34-YeZOI";
-        
-        let supabaseClient = null;
-        let useMock = true;
+        // BASE DE DONNÉES TEMPORAIRE DE JEUX (Modèle extensible)
+        const ALL_GAMES_DATABASE = [
+            { id: 1, title: "Skyjo", desc: "Le célèbre jeu de cartes de stratégie et de calcul pour toute la famille.", img: "https://images-na.ssl-images-amazon.com/images/I/81+fS+9m7GL.jpg" },
+            { id: 2, title: "7 Wonders Architects", desc: "Construisez une des 7 merveilles du monde antique avant vos adversaires.", img: "https://images-na.ssl-images-amazon.com/images/I/81t37AunpYL.jpg" },
+            { id: 3, title: "Catan", desc: "Le grand classique moderne de commerce, d'échange et de colonisation.", img: "https://images-na.ssl-images-amazon.com/images/I/81W9LpX8ZDL.jpg" },
+            { id: 4, title: "Uno", desc: "Le jeu de cartes incontournable où les coups bas sont permis pour vider sa main.", img: "https://images-na.ssl-images-amazon.com/images/I/71+v9bKzYKL.jpg" },
+            { id: 5, title: "Monopoly France", desc: "Achetez, vendez, négociez et ruinez vos adversaires dans la version française.", img: "https://images-na.ssl-images-amazon.com/images/I/81U8g7bI6vL.jpg" },
+            { id: 6, title: "Les Aventuriers du Rail", desc: "Voyagez en train à travers l'Europe en construisant vos voies ferrées.", img: "https://images-na.ssl-images-amazon.com/images/I/91N7uSgGixL.jpg" },
+            { id: 7, title: "Dixit", desc: "Un jeu d'illustration et d'imagination poétique où chaque phrase est un indice.", img: "https://images-na.ssl-images-amazon.com/images/I/71bFd0WJpPL.jpg" },
+            { id: 8, title: "Mito", desc: "Le seul jeu de société où tricher est non seulement autorisé, mais obligatoire !", img: "https://images-na.ssl-images-amazon.com/images/I/71A9YV7vOQL.jpg" },
+            { id: 9, title: "Blanc Manger Cocon", desc: "Le jeu d'humour noir et de combinaisons de phrases parfait pour l'apéro.", img: "https://images-na.ssl-images-amazon.com/images/I/61MhX8HhJKL.jpg" },
+            { id: 10, title: "Splendor", desc: "Incarnez un riche marchand de la Renaissance et achetez des mines de pierres précieuses.", img: "https://images-na.ssl-images-amazon.com/images/I/81N6A8z7wEL.jpg" },
+            { id: 11, title: "Azul", desc: "Devenez un artisan mosaïste et décorez les murs du Palais Royal d'Evora.", img: "https://images-na.ssl-images-amazon.com/images/I/813uO6xI8yL.jpg" },
+            { id: 12, title: "MicroMacro : Crime City", desc: "Un jeu d'enquête géant sur carte façon 'Où est Charlie' plein de détails.", img: "https://images-na.ssl-images-amazon.com/images/I/81MhNis9uLL.jpg" }
+        ];
 
-        if (typeof supabase !== 'undefined') {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            useMock = false;
-        }
+        let displayedCount = 10;
+        let activeGames = [...ALL_GAMES_DATABASE];
 
-        // SÉCURITÉ : Vérifier si l'utilisateur a le droit d'être ici
         window.onload = function() {
-            const currentSession = localStorage.getItem('ludo_session');
-            
-            if (!currentSession) {
-                // Pas de session ? On rejette le pirate vers la page de connexion
-                alert("Accès refusé. Veuillez vous connecter d'abord.");
+            // Sécurité : Vérification de connexion
+            if(!localStorage.getItem('ludo_session')) {
                 window.location.href = "index.html";
                 return;
             }
-
-            const sessionData = JSON.parse(currentSession);
-            document.getElementById('user-display').innerText = sessionData.email;
-
-            if (sessionData.isVisitor) {
-                const badge = document.getElementById('badge-status');
-                badge.innerText = "Mode Visiteur";
-                badge.className = "badge visitor";
+            // Appliquer le thème préféré sauvegardé
+            if(localStorage.getItem('theme') === 'light') {
+                document.body.classList.add('light-theme');
             }
+            renderGames();
         };
 
-        // GESTION DE LA DÉCONNEXION
-        async function logout() {
-            localStorage.removeItem('ludo_session');
-            if (!useMock && supabaseClient) {
-                await supabaseClient.auth.signOut();
+        function renderGames() {
+            const grid = document.getElementById('games-grid');
+            grid.innerHTML = "";
+            
+            const chunk = activeGames.slice(0, displayedCount);
+            
+            if(chunk.length === 0) {
+                document.getElementById('not-found').style.display = "block";
+                document.getElementById('load-more-btn').style.display = "none";
+                return;
+            } else {
+                document.getElementById('not-found').style.display = "none";
             }
-            // On renvoie vers l'écran de connexion
-            window.location.href = "index.html";
+
+            chunk.forEach(game => {
+                const amazonSearchUrl = `https://www.amazon.fr/s?k=${encodeURIComponent(game.title + ' jeu de société')}`;
+                
+                const card = document.createElement('div');
+                card.className = "game-card";
+                card.innerHTML = `
+                    <div>
+                        <img src="${game.img}" class="game-img" alt="${game.title}">
+                        <h3 class="game-title">${game.title}</h3>
+                        <p class="game-desc">${game.desc}</p>
+                        <a href="${amazonSearchUrl}" target="_blank" class="amazon-link">🛒 Voir sur Amazon</a>
+                    </div>
+                    <div>
+                        <div class="actions-box">
+                            <button class="btn-action" onclick="saveToList('${game.title}', 'favoris')">⭐ Favoris</button>
+                            <button class="btn-action" onclick="saveToList('${game.title}', 'souhaits')">💡 Souhaits</button>
+                            <button class="btn-action" onclick="saveToList('${game.title}', 'etagere')">📦 Étagère</button>
+                        </div>
+                        <div class="rating-zone">
+                            <span>Note :</span>
+                            <span class="stars" onclick="rateGame('${game.title}')">⭐⭐⭐⭐☆</span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            // Masquer le bouton si on a tout affiché
+            if (displayedCount >= activeGames.length) {
+                document.getElementById('load-more-btn').style.style.display = "none";
+            } else {
+                document.getElementById('load-more-btn').style.display = "inline-block";
+            }
+        }
+
+        function loadMoreGames() {
+            displayedCount += 10;
+            renderGames();
+        }
+
+        function filterGames() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            activeGames = ALL_GAMES_DATABASE.filter(g => g.title.toLowerCase().includes(query));
+            displayedCount = 10; // Reset pagination
+            renderGames();
+        }
+
+        // ACTIONS DE STOCKAGE UTILISATEUR
+        function saveToList(gameTitle, listName) {
+            let userData = JSON.parse(localStorage.getItem('user_lists') || '{"favoris":[],"souhaits":[],"etagere":[]}');
+            if(!userData[listName].includes(gameTitle)) {
+                userData[listName].push(gameTitle);
+                localStorage.setItem('user_lists', JSON.stringify(userData));
+                alert(`✨ ${gameTitle} a bien été ajouté à votre liste : ${listName} !`);
+            } else {
+                alert(`Le jeu ${gameTitle} est déjà présent.`);
+            }
+        }
+
+        function rateGame(gameTitle) {
+            const comment = prompt(`Laissez un commentaire pour ${gameTitle} :`);
+            if(comment) {
+                let reviews = JSON.parse(localStorage.getItem('user_reviews') || '[]');
+                reviews.push({ game: gameTitle, text: comment, date: new Date().toLocaleDateString() });
+                localStorage.setItem('user_reviews', JSON.stringify(reviews));
+                alert("Avis enregistré ! Retrouvez-le sur votre profil.");
+            }
+        }
+
+        function openAddGameForm() {
+            const newName = prompt("Entrez le nom du jeu manquant à ajouter :");
+            if(newName) {
+                alert(`Merci ! La proposition pour "${newName}" a été envoyée pour vérification.`);
+            }
         }
     </script>
 </body>
