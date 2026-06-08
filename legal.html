@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LudoApp - Informations Légales</title>
+    <style>
+        :root { --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc; --primary: #38bdf8; --border: rgba(255, 255, 255, 0.1); }
+        body.light-theme { --bg-color: #f1f5f9; --card-bg: #ffffff; --text-main: #0f172a; --border: rgba(0, 0, 0, 0.1); }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 50px;}
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; background-color: var(--card-bg); border-bottom: 1px solid var(--border); }
+        .brand { font-size: 1.5rem; font-weight: 700; color: var(--primary); text-decoration: none; }
+        .nav-links { display: flex; gap: 20px; list-style: none; }
+        .nav-links a { color: var(--text-main); text-decoration: none; font-weight: 600; }
+        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+        h2 { color: var(--primary); margin-top: 35px; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 5px;}
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="accueil.html" class="brand">🎲 LudoApp</a>
+        <ul class="nav-links">
+            <li><a href="accueil.html">Accueil</a></li>
+            <li><a href="compteur.html">Compteur</a></li>
+            <li><a href="profil.html">Mon Profil</a></li>
+            <li><a href="legal.html" class="active">Infos Légales</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1>Conditions Générales & Mentions Légales</h1>
+        
+        <h2>1. Présentation du site</h2>
+        <p>En vertu de l'article 6 de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique, il est précisé aux utilisateurs de l'application LudoApp l'identité des différents intervenants dans le cadre de sa réalisation et de son suivi.</p>
+
+        <h2>2. Conditions Générales d'Utilisation (CGU)</h2>
+        <p>L'utilisation de LudoApp implique l'acceptation pleine et entière des conditions générales d'utilisation ci-décrites. Ce service est réservé aux personnes âgées de 15 ans ou plus, conformément au seuil de consentement numérique de protection des mineurs.</p>
+
+        <h2>3. Liens d'affiliation Commerciale (Amazon)</h2>
+        <p>LudoApp propose des hyperliens menant vers la plateforme commerciale Amazon. LudoApp n'est pas responsable des variations de prix, de stocks ou des litiges de livraison intervenant sur le site tiers Amazon.fr.</p>
+
+        <h2>4. Données personnelles & RGPD</h2>
+        <p>Conformément aux dispositions de la loi 78-17 du 6 janvier 1978 modifiée, l'utilisateur dispose d'un droit d'accès, de modification et de suppression des informations collectées. Les données d'étagères et de favoris sont sauvegardées de façon sécurisée via le service de cloud Supabase ou cryptées localement.</p>
+    </div>
+
+    <script>
+        if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
+    </script>
+</body>
+</html>
