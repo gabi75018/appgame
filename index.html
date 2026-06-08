@@ -35,7 +35,6 @@
             padding: 20px;
         }
 
-        /* Conteneur Responsive haut de gamme */
         .app-container {
             width: 100%;
             max-width: 480px;
@@ -49,7 +48,6 @@
             transition: all 0.3s ease;
         }
 
-        /* En-tête de marque */
         .header-brand {
             display: flex;
             align-items: center;
@@ -58,9 +56,7 @@
             margin-bottom: 35px;
         }
 
-        .logo-icon {
-            font-size: 2rem;
-        }
+        .logo-icon { font-size: 2rem; }
 
         .brand-name {
             font-size: 1.6rem;
@@ -71,11 +67,7 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* Navigation / Écrans */
-        .screen {
-            display: none;
-        }
-
+        .screen { display: none; }
         .screen.active {
             display: block;
             animation: fadeIn 0.4s ease;
@@ -101,7 +93,6 @@
             text-align: center;
         }
 
-        /* Formulaires */
         .form-group {
             margin-bottom: 18px;
             position: relative;
@@ -148,11 +139,8 @@
             color: var(--text-muted);
         }
 
-        .checkbox-container input {
-            accent-color: var(--primary-blue);
-        }
+        .checkbox-container input { accent-color: var(--primary-blue); }
 
-        /* Mentions Légales Intégrées */
         .legal-notice {
             font-size: 0.75rem;
             color: var(--text-muted);
@@ -165,12 +153,8 @@
             border-left: 3px solid var(--primary-blue);
         }
 
-        .legal-notice a {
-            color: var(--primary-blue);
-            text-decoration: none;
-        }
+        .legal-notice button { vertical-align: baseline; }
 
-        /* Boutons */
         .btn {
             width: 100%;
             padding: 14px;
@@ -203,9 +187,7 @@
             margin-top: 12px;
         }
 
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.05); }
 
         .text-link {
             color: var(--primary-blue);
@@ -216,9 +198,7 @@
             text-decoration: none;
         }
 
-        .text-link:hover {
-            text-decoration: underline;
-        }
+        .text-link:hover { text-decoration: underline; }
 
         .footer-text {
             text-align: center;
@@ -227,7 +207,6 @@
             color: var(--text-muted);
         }
 
-        /* Vue Étagère / App */
         .dashboard-box {
             background: rgba(0, 0, 0, 0.2);
             border: 1px solid var(--border-color);
@@ -247,11 +226,8 @@
             color: white;
         }
 
-        .badge.visitor {
-            background: #f59e0b;
-        }
+        .badge.visitor { background: #f59e0b; }
 
-        /* Changement de taille pour PC / Tablettes */
         @media (min-width: 768px) {
             .app-container {
                 max-width: 520px;
@@ -340,9 +316,7 @@
                     <span id="user-display" style="font-weight:600;">Joueur</span>
                     <span id="badge-status" class="badge">Compte Cloud</span>
                 </div>
-                <p id="app-placeholder-text" style="font-size:0.9rem; color:var(--text-muted);">
-                    Vos données sont connectées en temps réel au serveur. Vous pouvez accéder à vos sauvegardes depuis n'importe quel écran.
-                </p>
+                <p id="app-placeholder-text" style="font-size:0.9rem; color:var(--text-muted);"></p>
             </div>
 
             <button class="btn btn-secondary" style="border-color: #ef4444; color: #ef4444;" onclick="logout()">Se déconnecter</button>
@@ -351,18 +325,28 @@
 
     <script>
         // CONFIGURATION SUPABASE CLOUD
-        // Remplace par tes vrais identifiants Supabase lorsque tu crées ton projet sur supabase.com
+        // Mettez vos vraies informations ici. 
+        // Si l'URL contient "kqrecawkgulnkiuezrui" ou si la clé échoue, le mode simulation locale prendra le relais automatiquement.
         const SUPABASE_URL = "https://kqrecawkgulnkiuezrui.supabase.co";
         const SUPABASE_ANON_KEY = "sb_publishable_g9cK2XcmWh3gWTm1Z9ViyQ_34-YeZOI";
         
-        let supabase = null;
+        let supabaseClient = null;
+        let useMock = true; // Par défaut on utilise la simulation si Supabase n'est pas configuré correctement
+
         try {
-            supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            // Vérification élémentaire pour savoir si l'utilisateur a personnalisé ses identifiants
+            if (typeof supabase !== 'undefined' && !SUPABASE_URL.includes("kqrecawkgulnkiuezrui")) {
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                useMock = false;
+                console.log("Supabase Cloud connecté avec succès !");
+            } else {
+                console.log("Utilisation de la base de données simulée (Mode local LocalStorage).");
+            }
         } catch(e) {
-            console.log("Supabase initialisé en mode local de développement.");
+            console.error("Erreur d'initialisation de Supabase, bascule en mode local :", e);
         }
 
-        // Vérification automatique de la session restée active au démarrage
+        // Vérification automatique de la session au démarrage
         window.onload = function() {
             const currentSession = localStorage.getItem('ludo_session');
             if(currentSession) {
@@ -373,10 +357,13 @@
 
         function switchScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
+            const targetScreen = document.getElementById(id);
+            if(targetScreen) {
+                targetScreen.classList.add('active');
+            }
         }
 
-        // INSCRIPTION AVEC SÉCURITÉ ET BLOCAGE DES DOUBLONS CLOUD
+        // INSCRIPTION
         async function register() {
             const email = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value;
@@ -386,40 +373,49 @@
                 return;
             }
 
-            // Si ta base Supabase n'est pas connectée, on utilise une simulation Cloud parfaite
-            if(!supabase || SUPABASE_URL.includes("TON_PROJET")) {
+            if(useMock) {
+                // SIMULATION LOCAL STORAGE
                 let mockCloudDB = JSON.parse(localStorage.getItem('mock_server_db') || '[]');
                 
-                // Le serveur vérifie si l'adresse e-mail existe déjà mondialement
                 if(mockCloudDB.some(user => user.email.toLowerCase() === email.toLowerCase())) {
-                    alert("⚠️ Impossible de créer le compte : Cette adresse e-mail est déjà utilisée par un autre joueur !");
+                    alert("⚠️ Impossible de créer le compte : Cette adresse e-mail est déjà utilisée !");
                     return;
                 }
 
                 mockCloudDB.push({ email, password });
                 localStorage.setItem('mock_server_db', JSON.stringify(mockCloudDB));
-                alert("✨ Compte créé avec succès ! Connectez-vous.");
+                alert("✨ Compte simulé créé avec succès ! Connectez-vous.");
                 switchScreen('screen-login');
             } else {
-                // VRAI LIEN CLOUD
-                const { data, error } = await supabase.auth.signUp({ email, password });
-                if (error) alert("Erreur d'inscription : " + error.message);
-                else { alert("Vérifiez vos e-mails pour confirmer l'inscription !"); switchScreen('screen-login'); }
+                // VRAI LIEN CLOUD SUPABASE
+                const { data, error } = await supabaseClient.auth.signUp({ email, password });
+                if (error) {
+                    alert("Erreur d'inscription Supabase : " + error.message);
+                } else { 
+                    alert("Inscription réussie ! Vérifiez vos e-mails pour valider votre compte (si l'option est activée sur votre console Supabase)."); 
+                    switchScreen('screen-login'); 
+                }
             }
         }
 
-        // CONNEXION DISTANTE MULTI-APPAREILS
+        // CONNEXION
         async function login() {
             const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value;
             const rememberMe = document.getElementById('remember-me').checked;
 
-            if(!supabase || SUPABASE_URL.includes("TON_PROJET")) {
+            if(!email || !password) {
+                alert("Veuillez remplir tous les champs.");
+                return;
+            }
+
+            if(useMock) {
+                // SIMULATION LOCAL STORAGE
                 let mockCloudDB = JSON.parse(localStorage.getItem('mock_server_db') || '[]');
                 const user = mockCloudDB.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
                 
                 if(!user) {
-                    alert("Identifiants incorrects ou compte inexistant.");
+                    alert("Identifiants incorrects ou compte inexistant en mode local.");
                     return;
                 }
 
@@ -428,11 +424,14 @@
                 }
                 launchApp(user.email, false);
             } else {
-                // VRAI LIEN CLOUD
-                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) alert("Erreur : " + error.message);
-                else {
-                    if(rememberMe) localStorage.setItem('ludo_session', JSON.stringify({ email: data.user.email, isVisitor: false }));
+                // VRAI LIEN CLOUD SUPABASE
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                if (error) {
+                    alert("Erreur d'authentification Supabase : " + error.message);
+                } else {
+                    if(rememberMe) {
+                        localStorage.setItem('ludo_session', JSON.stringify({ email: data.user.email, isVisitor: false }));
+                    }
                     launchApp(data.user.email, false);
                 }
             }
@@ -456,17 +455,19 @@
                 placeholderText.innerText = "⚠️ Vous naviguez en mode visiteur. Vous pouvez tester l'application, mais l'ajout de jeux à l'étagère et la sauvegarde des scores nécessite la création d'un compte joueur.";
             } else {
                 userDisplay.innerText = username;
-                badgeStatus.innerText = "Compte Cloud";
+                badgeStatus.innerText = useMock ? "Compte Simulé (Local)" : "Compte Cloud (Supabase)";
                 badgeStatus.className = "badge";
-                placeholderText.innerText = "Félicitations ! Vous êtes connecté à votre serveur distant. Vos futurs jeux et scores seront enregistrés indéfiniment et synchronisés sur tous vos appareils.";
+                placeholderText.innerText = useMock 
+                    ? "Félicitations ! Vous êtes connecté au serveur virtuel local. Vos données de jeu seront conservées dans le cache de votre navigateur actuel."
+                    : "Félicitations ! Vous êtes connecté à votre serveur distant Supabase. Vos futurs jeux et scores seront synchronisés sur tous vos appareils.";
             }
         }
 
         // DÉCONNEXION
         async function logout() {
             localStorage.removeItem('ludo_session');
-            if(supabase && !SUPABASE_URL.includes("TON_PROJET")) {
-                await supabase.auth.signOut();
+            if(!useMock && supabaseClient) {
+                await supabaseClient.auth.signOut();
             }
             document.getElementById('login-email').value = "";
             document.getElementById('login-password').value = "";
