@@ -2,331 +2,398 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>CoasterControl Pro v1.0 - Panel de Gestion</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LudoApp - Connexion</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --panel-bg: #2c3e50;
-            --btn-red: #c0392b;
-            --btn-green: #27ae60;
-            --btn-yellow: #f1c40f;
-            --lcd-bg: #1a1a1a;
-            --lcd-text: #00ff00;
+            --bg-color: #ffffff;
+            --primary-green: #76d765;
+            --primary-green-hover: #61b852;
+            --dark-text: #000000;
+            --grey-input: #c4c4c4;
+            --border-radius-btn: 25px;
+            --border-radius-pill: 15px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
         }
 
         body {
-            background-color: #121212;
-            color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--dark-text);
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* --- Zone de Visualisation --- */
-        #track-visualizer {
-            flex: 1;
-            background: #1e1e1e;
-            position: relative;
-            border-bottom: 4px solid #444;
+            justify-content: center;
+            align-items: center;
             padding: 20px;
         }
 
-        .track-line {
+        /* Conteneur principal qui s'adapte à tous les écrans */
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            min-height: 550px;
+            border: 5px solid var(--dark-text);
+            padding: 40px 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* En-tête avec le logo et nom du site */
+        .header-brand {
             position: absolute;
-            top: 50%;
-            left: 5%;
-            right: 5%;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .avatar-icon {
+            width: 35px;
+            height: 35px;
+            background-color: var(--dark-text);
+            border-radius: 50%;
+            position: relative;
+        }
+        .avatar-icon::before {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: var(--bg-color);
+            border-radius: 50%;
+            top: 4px;
+            left: 10px;
+        }
+        .avatar-icon::after {
+            content: '';
+            position: absolute;
+            width: 25px;
             height: 10px;
-            background: #555;
-            border-radius: 5px;
-            transform: translateY(-50%);
+            background: var(--bg-color);
+            border-radius: 10px 10px 0 0;
+            bottom: 2px;
+            left: 5px;
         }
 
-        .block-zone {
-            position: absolute;
-            top: 40%;
-            height: 30px;
-            border-left: 2px dashed #888;
-            padding-left: 5px;
-            font-size: 10px;
-            color: #888;
+        /* Écrans de l'application */
+        .screen {
+            display: none;
+            width: 100%;
+            max-width: 450px;
+            margin: 40px auto 0 auto;
+            text-align: center;
         }
 
-        .train {
-            position: absolute;
-            top: 50%;
-            width: 60px;
-            height: 25px;
-            background: #3498db;
-            border: 2px solid white;
-            border-radius: 5px;
-            transform: translateY(-50%);
-            transition: left 0.1s linear;
+        .screen.active {
+            display: block;
+        }
+
+        /* Titre principal calqué sur ta maquette */
+        .main-title {
+            font-size: 1.8rem;
+            font-style: italic;
+            font-weight: normal;
+            text-transform: uppercase;
+            margin-bottom: 35px;
+            letter-spacing: 1px;
+        }
+
+        /* Formulaires et Inputs */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 20px;
+            background-color: var(--grey-input);
+            border: none;
+            font-size: 1rem;
+            color: #000;
+            text-align: center;
+            outline: none;
+        }
+
+        .checkbox-group {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 12px;
-            z-index: 10;
+            gap: 8px;
+            margin: 20px 0;
+            font-size: 0.95rem;
         }
 
-        /* --- Panel de Contrôle --- */
-        #control-panel {
-            height: 400px;
-            background: var(--panel-bg);
-            display: grid;
-            grid-template-columns: 1fr 2fr 1fr;
-            gap: 20px;
-            padding: 20px;
-            box-shadow: 0 -5px 15px rgba(0,0,0,0.5);
+        .checkbox-group input {
+            width: 14px;
+            height: 14px;
         }
 
-        .panel-section {
-            background: rgba(0,0,0,0.2);
-            border: 2px solid #444;
-            border-radius: 8px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        h2 { margin: 0 0 10px 0; font-size: 14px; text-transform: uppercase; color: #bdc3c7; }
-
-        /* --- Éléments d'interface --- */
-        .lcd-display {
-            background: var(--lcd-bg);
-            color: var(--lcd-text);
-            padding: 10px;
-            font-family: 'Courier New', monospace;
-            border-radius: 4px;
-            border: 2px inset #444;
-            height: 80px;
-            overflow-y: auto;
-            font-size: 13px;
-        }
-
-        .grid-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .btn {
-            padding: 15px 10px;
+        /* Boutons principaux */
+        .btn-main {
+            background-color: var(--primary-green);
+            color: var(--dark-text);
             border: none;
-            border-radius: 4px;
+            padding: 12px 40px;
+            font-size: 1.1rem;
             font-weight: bold;
+            border-radius: var(--border-radius-btn);
             cursor: pointer;
             text-transform: uppercase;
-            transition: filter 0.2s;
+            width: 100%;
+            max-width: 320px;
+            transition: background 0.2s;
+            margin: 10px auto;
+            display: block;
         }
 
-        .btn:active { filter: brightness(0.8); }
-        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-main:hover {
+            background-color: var(--primary-green-hover);
+        }
 
-        .btn-dispatch { background: var(--btn-green); color: white; grid-column: span 2; height: 60px; font-size: 18px; }
-        .btn-stop { background: var(--btn-red); color: white; height: 80px; font-size: 20px; }
-        .btn-toggle { background: #7f8c8d; color: white; }
-        .btn-toggle.active { background: var(--btn-yellow); color: black; }
+        .btn-visitor {
+            background-color: #e2e8f0;
+            color: #334155;
+        }
+        .btn-visitor:hover {
+            background-color: #cbd5e1;
+        }
 
-        .status-light {
-            width: 15px;
-            height: 15px;
-            border-radius: 50%;
-            background: #333;
+        /* Liens du bas style "pilule" comme sur ton image */
+        .bottom-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .pill-link {
+            background-color: var(--primary-green);
+            color: var(--dark-text);
+            padding: 6px 14px;
+            border-radius: var(--border-radius-pill);
+            text-decoration: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: none;
+        }
+
+        .pill-link:hover {
+            background-color: var(--primary-green-hover);
+        }
+
+        /* Style de l'application une fois connecté (Dashboard temporaire) */
+        .dashboard-card {
+            background: #f8fafc;
+            border: 2px solid var(--dark-text);
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+
+        .status-badge {
             display: inline-block;
-            margin-right: 5px;
+            padding: 4px 12px;
+            background: #ffcbd1;
+            color: #b91c1c;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            font-weight: bold;
         }
-        .light-on { background: #00ff00; box-shadow: 0 0 10px #00ff00; }
-        .light-off { background: #aa0000; }
 
+        .status-badge.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* RESPONSIVE DESIGN (Tablettes et PC) */
+        @media (min-width: 768px) {
+            .app-container {
+                padding: 60px 40px;
+            }
+            .main-title {
+                font-size: 2.3rem;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <div id="track-visualizer">
-        <div class="track-line"></div>
-        
-        <div class="block-zone" style="left: 5%; width: 20%;">STATION</div>
-        <div class="block-zone" style="left: 25%; width: 15%;">LIFT HILL</div>
-        <div class="block-zone" style="left: 40%; width: 40%;">MAIN COURSE</div>
-        <div class="block-zone" style="left: 80%; width: 15%;">BRAKE RUN</div>
-
-        <div id="train1" class="train" style="background: #e74c3c;">T1</div>
-        <div id="train2" class="train" style="background: #3498db;">T2</div>
-        <div id="train3" class="train" style="background: #f1c40f; color: black;">T3</div>
-    </div>
-
-    <div id="control-panel">
-        <div class="panel-section">
-            <h2>Sécurité Globale</h2>
-            <button class="btn btn-stop" onclick="triggerEStop()">E-STOP (Arrêt Urgence)</button>
-            <div class="lcd-display" id="log-display">
-                SYSTEM READY...<br>
-                ALL BLOCKS CLEAR.
-            </div>
-            <button class="btn btn-toggle" onclick="toggleAudio()">🔊 Annonce Station</button>
+    <div class="app-container">
+        <div class="header-brand">
+            <div class="avatar-icon"></div>
+            <span>Nom du Site</span>
         </div>
 
-        <div class="panel-section">
-            <h2>Contrôle Station</h2>
-            <div style="display: flex; justify-content: space-around; margin-bottom: 10px;">
-                <div><div id="light-gates" class="status-light"></div> Portillons</div>
-                <div><div id="light-harness" class="status-light"></div> Harnais</div>
+        <div id="screen-login" class="screen active">
+            <h1 class="main-title">Connexion à votre compte</h1>
+            <div class="form-group">
+                <input type="email" id="login-email" class="input-field" placeholder="Adresse Mail">
             </div>
-            <div class="grid-buttons">
-                <button id="btn-gates" class="btn btn-toggle" onclick="toggleGates()">Ouvrir Portillons</button>
-                <button id="btn-harness" class="btn btn-toggle" onclick="toggleHarness()">Ouvrir Harnais</button>
-                <button id="btn-dispatch" class="btn btn-dispatch" onclick="dispatchTrain()" disabled>DISPATCH</button>
+            <div class="form-group">
+                <input type="password" id="login-password" class="input-field" placeholder="Mot de Passe">
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="remember-me">
+                <label for="remember-me">Se souvenir de moi</label>
+            </div>
+
+            <button class="btn-main" onclick="handleLogin()">Connexion</button>
+            <button class="btn-main btn-visitor" onclick="enterAsVisitor()">Mode Visiteur</button>
+
+            <div class="bottom-links">
+                <button class="pill-link" onclick="alert('Fonctionnalité mot de passe oublié à lier avec l\'envoi de mail.')">Mot de passe oublié ?</button>
+                <button class="pill-link" onclick="switchScreen('screen-register')">Je n'ai pas de compte</button>
             </div>
         </div>
 
-        <div class="panel-section">
-            <h2>Statut du Circuit</h2>
-            <div id="block-status" style="font-size: 12px; line-height: 2;">
-                STATION: <span id="s-stat" style="color:red">OCCUPÉ</span><br>
-                LIFT: <span id="l-stat">LIBRE</span><br>
-                MAIN: <span id="m-stat">LIBRE</span><br>
-                BRAKES: <span id="b-stat">LIBRE</span>
+        <div id="screen-register" class="screen">
+            <h1 class="main-title">Créer un compte</h1>
+            <div class="form-group">
+                <input type="email" id="register-email" class="input-field" placeholder="Votre Adresse Mail">
             </div>
-            <hr width="100%">
-            <div style="font-size: 11px;">
-                Vitesse : <span id="speed-val">0</span> km/h<br>
-                Mode : <span style="color: var(--btn-yellow)">MANUEL</span>
+            <div class="form-group">
+                <input type="password" id="register-password" class="input-field" placeholder="Créer un Mot de Passe">
+            </div>
+
+            <button class="btn-main" onclick="handleRegister()">Créer mon compte</button>
+
+            <div class="bottom-links">
+                <button class="pill-link" onclick="switchScreen('screen-login')">J'ai déjà un compte (Connexion)</button>
             </div>
         </div>
-    </div>
 
-<script>
-    // --- Configuration ---
-    const trains = [
-        { id: 'train1', pos: 7, status: 'station', speed: 0 },
-        { id: 'train2', pos: 82, status: 'moving', speed: 0 },
-        { id: 'train3', pos: 45, status: 'moving', speed: 0 }
-    ];
-
-    let systemActive = true;
-    let gatesOpen = false;
-    let harnessOpen = false;
-    let blocks = { station: true, lift: false, main: true, brakes: true };
-
-    // --- Logique de Simulation ---
-    function update() {
-        if (!systemActive) return;
-
-        trains.forEach(t => {
-            const el = document.getElementById(t.id);
+        <div id="screen-app" class="screen">
+            <h1 class="main-title">Mon Étagère & Scores</h1>
             
-            // Logique de mouvement simplifiée par zones
-            if (t.status === 'moving') {
-                let nextPos = t.pos + 0.2;
+            <div class="dashboard-card">
+                <p>Statut actuel : <span id="user-status">Connecté</span></p>
+                <div id="visitor-restriction" class="status-badge">⚠️ Mode Visiteur : Sauvegarde désactivée</div>
+                
+                <div style="margin-top: 30px; border-top: 1px dashed #ccc; padding-top: 20px;">
+                    <p style="font-size: 0.9rem; color: #555;">(C'est ici qu'on affichera ton étagère de jeux et ton compteur de points dans la prochaine étape !)</p>
+                </div>
+            </div>
 
-                // Gestion des collisions (Système de blocs)
-                if (nextPos >= 25 && nextPos < 26 && blocks.lift) t.speed = 0; // Stop avant lift
-                else if (nextPos >= 40 && nextPos < 41 && blocks.main) t.speed = 0; // Stop avant main
-                else if (nextPos >= 80 && nextPos < 81 && blocks.brakes) t.speed = 0; // Stop avant brakes
-                else if (nextPos >= 95) { // Boucle vers la station
-                    if (blocks.station) {
-                        t.speed = 0;
-                        t.pos = 94.5;
-                    } else {
-                        t.pos = 5;
-                        t.status = 'station';
-                        log("Train en gare.");
-                    }
-                } else {
-                    t.pos = nextPos;
-                    t.speed = 45;
-                }
+            <button class="btn-main" style="background-color: #d9534f; color: white; margin-top: 40px;" onclick="handleLogout()">Déconnexion</button>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURATION SUPABASE (A remplacer avec tes propres clés à l'étape suivante)
+        // Pour l'instant, on utilise une simulation locale robuste qui imite parfaitement le comportement Cloud
+        const USE_DEMO_DB = true; 
+
+        // Simulation de la base de données distante dans le cloud (Fichier data partagé)
+        if (!localStorage.getItem('mock_cloud_users')) {
+            localStorage.setItem('mock_cloud_users', JSON.stringify([
+                { email: "test@ludo.fr", password: "password123" } // Compte démo existant
+            ]));
+        }
+
+        // Vérification de la session au chargement (Reste connecté si "Se souvenir de moi" est coché)
+        window.onload = function() {
+            const savedUser = localStorage.getItem('ludo_current_user');
+            if (savedUser) {
+                const user = JSON.parse(savedUser);
+                launchApp(user.email, user.isVisitor);
             }
-            
-            el.style.left = t.pos + "%";
-        });
+        };
 
-        updateBlockStatus();
-        checkDispatchReady();
-        document.getElementById('speed-val').innerText = trains[0].status === 'station' ? 0 : 72;
-    }
-
-    function updateBlockStatus() {
-        // Détermine quel bloc est occupé
-        let b = { station: false, lift: false, main: false, brakes: false };
-        trains.forEach(t => {
-            if (t.pos < 25) b.station = true;
-            else if (t.pos < 40) b.lift = true;
-            else if (t.pos < 80) b.main = true;
-            else b.brakes = true;
-        });
-        blocks = b;
-
-        document.getElementById('s-stat').innerText = b.station ? "OCCUPÉ" : "LIBRE";
-        document.getElementById('s-stat').style.color = b.station ? "red" : "lime";
-        document.getElementById('l-stat').innerText = b.lift ? "OCCUPÉ" : "LIBRE";
-        document.getElementById('l-stat').style.color = b.lift ? "red" : "lime";
-        document.getElementById('m-stat').innerText = b.main ? "OCCUPÉ" : "LIBRE";
-        document.getElementById('m-stat').style.color = b.main ? "red" : "lime";
-        document.getElementById('b-stat').innerText = b.brakes ? "OCCUPÉ" : "LIBRE";
-        document.getElementById('b-stat').style.color = b.brakes ? "red" : "lime";
-    }
-
-    // --- Commandes ---
-    function toggleGates() {
-        if (!systemActive) return;
-        gatesOpen = !gatesOpen;
-        document.getElementById('btn-gates').classList.toggle('active');
-        document.getElementById('light-gates').classList.toggle('light-on');
-        log(gatesOpen ? "Portillons ouverts" : "Portillons fermés");
-    }
-
-    function toggleHarness() {
-        if (!systemActive) return;
-        if (gatesOpen) {
-            log("ERREUR : Fermez les portillons d'abord !");
-            return;
+        // Permet de basculer proprement entre les écrans
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
         }
-        harnessOpen = !harnessOpen;
-        document.getElementById('btn-harness').classList.toggle('active');
-        document.getElementById('light-harness').classList.toggle('light-on');
-        log(harnessOpen ? "Harnais déverrouillés" : "Harnais verrouillés");
-    }
 
-    function checkDispatchReady() {
-        const canDispatch = !gatesOpen && !harnessOpen && !blocks.lift && systemActive;
-        document.getElementById('btn-dispatch').disabled = !canDispatch;
-    }
+        // Action : Création de compte (Vérifie les doublons !)
+        function handleRegister() {
+            const email = document.getElementById('register-email').value.trim().toLowerCase();
+            const password = document.getElementById('register-password').value;
 
-    function dispatchTrain() {
-        const trainInStation = trains.find(t => t.status === 'station');
-        if (trainInStation) {
-            trainInStation.status = 'moving';
-            trainInStation.pos = 6;
-            log("DISPATCH : Train en route vers le Lift.");
+            if (!email || !password) {
+                alert("Veuillez remplir tous les champs.");
+                return;
+            }
+
+            let users = JSON.parse(localStorage.getItem('mock_cloud_users'));
+
+            // SECOURS EMPECHER LES DOUBLONS D'ADRESSE MAIL
+            const emailExists = users.some(user => user.email === email);
+            if (emailExists) {
+                alert("Erreur : Un compte existe déjà avec cette adresse e-mail !");
+                return;
+            }
+
+            // Ajout du nouvel utilisateur dans le fichier data simulé
+            users.push({ email: email, password: password });
+            localStorage.setItem('mock_cloud_users', JSON.stringify(users));
+
+            alert("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
+            switchScreen('screen-login');
         }
-    }
 
-    function triggerEStop() {
-        systemActive = !systemActive;
-        const color = systemActive ? "var(--btn-red)" : "#ff0000";
-        document.body.style.boxShadow = systemActive ? "none" : "inset 0 0 100px red";
-        log(systemActive ? "SYSTÈME RÉINITIALISÉ" : "!!! ARRÊT D'URGENCE ACTIVÉ !!!");
-    }
+        // Action : Connexion
+        function handleLogin() {
+            const email = document.getElementById('login-email').value.trim().toLowerCase();
+            const password = document.getElementById('login-password').value;
+            const rememberMe = document.getElementById('remember-me').checked;
 
-    function log(msg) {
-        const display = document.getElementById('log-display');
-        display.innerHTML += `<br>> ${msg}`;
-        display.scrollTop = display.scrollHeight;
-    }
+            let users = JSON.parse(localStorage.getItem('mock_cloud_users'));
+            const user = users.find(u => u.email === email && u.password === password);
 
-    function toggleAudio() {
-        log("Annonce : 'Restez assis, gardez les mains à l'intérieur...'");
-    }
+            if (!user) {
+                alert("Identifiants incorrects. Veuillez réessayer.");
+                return;
+            }
 
-    // Boucle de rendu
-    setInterval(update, 50);
+            // Gestion de la session persistante
+            if (rememberMe) {
+                localStorage.setItem('ludo_current_user', JSON.stringify({ email: email, isVisitor: false }));
+            }
 
-</script>
+            launchApp(email, false);
+        }
+
+        // Action : Entrer en mode visiteur
+        function enterAsVisitor() {
+            launchApp("Visiteur", true);
+        }
+
+        // Initialisation de l'application après authentification
+        function launchApp(username, isVisitor) {
+            switchScreen('screen-app');
+            const statusBadge = document.getElementById('visitor-restriction');
+            const statusText = document.getElementById('user-status');
+
+            if (isVisitor) {
+                statusText.innerText = "Mode Visiteur Anonyme";
+                statusBadge.style.display = "inline-block";
+            } else {
+                statusText.innerText = `Connecté en tant que (${username})`;
+                statusBadge.style.display = "none";
+            }
+        }
+
+        // Action : Déconnexion complète
+        function handleLogout() {
+            localStorage.removeItem('ludo_current_user'); // Supprime la session persistante
+            document.getElementById('login-email').value = "";
+            document.getElementById('login-password').value = "";
+            switchScreen('screen-login');
+        }
+    </script>
 </body>
 </html>
