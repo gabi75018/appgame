@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LudoApp - Profil & Paramètres</title>
+    <style>
+        :root {
+            --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc;
+            --primary: #38bdf8; --border: rgba(255, 255, 255, 0.1); --text-muted: #94a3b8;
+        }
+        body.light-theme {
+            --bg-color: #f1f5f9; --card-bg: #ffffff; --text-main: #0f172a; --border: rgba(0, 0, 0, 0.1); --text-muted: #64748b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; }
+        
+        nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; background-color: var(--card-bg); border-bottom: 1px solid var(--border); }
+        .brand { font-size: 1.5rem; font-weight: 700; color: var(--primary); text-decoration: none; }
+        .nav-links { display: flex; gap: 20px; list-style: none; }
+        .nav-links a { color: var(--text-main); text-decoration: none; font-weight: 600; }
+        .nav-links a:hover, .nav-links a.active { color: var(--primary); }
+
+        .main-container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+        .box { background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 25px; }
+        
+        .btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
+        .btn-primary { background-color: var(--primary); color: #0f172a; }
+        .btn-danger { background-color: #ef4444; color: white; margin-top: 15px; width: 100%;}
+        
+        .toggle-box { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
+        .item-list { margin-top: 10px; padding-left: 20px; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="accueil.html" class="brand">🎲 LudoApp</a>
+        <ul class="nav-links">
+            <li><a href="accueil.html">Accueil</a></li>
+            <li><a href="compteur.html">Compteur</a></li>
+            <li><a href="profil.html" class="active">Mon Profil</a></li>
+            <li><a href="legal.html">Infos Légales</a></li>
+        </ul>
+    </nav>
+
+    <div class="main-container">
+        <div class="box">
+            <h3>Mon Profil</h3>
+            <p style="margin: 10px 0; color: var(--text-muted);">Pseudo : <strong id="pseudo-display" style="color:var(--primary)"></strong></p>
+            <button class="btn btn-primary" onclick="changePseudo()">✏️ Modifier mon pseudo</button>
+        </div>
+
+        <div class="box">
+            <h3>📦 Mon Étagère</h3>
+            <ul id="list-etagere" class="item-list"></ul>
+        </div>
+
+        <div class="box">
+            <h3>⭐ Mes Favoris</h3>
+            <ul id="list-favoris" class="item-list"></ul>
+        </div>
+
+        <div class="box">
+            <h3>💬 Mes Évaluations & Commentaires</h3>
+            <div id="reviews-box" style="margin-top:10px;"></div>
+        </div>
+
+        <div class="box">
+            <h3>⚙️ Paramètres</h3>
+            <div class="toggle-box">
+                <span>Mode Sombre / Clair</span>
+                <button class="btn" id="theme-toggle-btn" onclick="toggleTheme()">Basculer</button>
+            </div>
+            <button class="btn btn-danger" onclick="logout()">Se déconnecter</button>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            // Thème de base
+            if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
+            
+            // Génération Pseudo Anonyme Automatique si inexistant
+            if(!localStorage.getItem('username')) {
+                const rand = Math.floor(10000 + Math.random() * 90000);
+                localStorage.setItem('username', `Anonymous${rand}`);
+            }
+            document.getElementById('pseudo-display').innerText = localStorage.getItem('username');
+
+            // Charger les listes
+            loadUserLists();
+        };
+
+        function changePseudo() {
+            const newPseudo = prompt("Choisissez votre nouveau pseudonyme :", localStorage.getItem('username'));
+            if(newPseudo && newPseudo.trim() !== "") {
+                localStorage.setItem('username', newPseudo.trim());
+                document.getElementById('pseudo-display').innerText = newPseudo;
+            }
+        }
+
+        function toggleTheme() {
+            if(document.body.classList.contains('light-theme')) {
+                document.body.classList.remove('light-theme');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.body.classList.add('light-theme');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        function loadUserLists() {
+            const data = JSON.parse(localStorage.getItem('user_lists') || '{"favoris":[],"souhaits":[],"etagere":[]}');
+            
+            const etagereLi = document.getElementById('list-etagere');
+            etagereLi.innerHTML = data.etagere.length ? data.etagere.map(j => `<li>${j}</li>`).join('') : "<li>Aucun jeu sur votre étagère</li>";
+
+            const favorisLi = document.getElementById('list-favoris');
+            favorisLi.innerHTML = data.favoris.length ? data.favoris.map(j => `<li>${j}</li>`).join('') : "<li>Aucun jeu dans vos favoris</li>";
+
+            // Avis
+            const reviews = JSON.parse(localStorage.getItem('user_reviews') || '[]');
+            const rBox = document.getElementById('reviews-box');
+            rBox.innerHTML = reviews.length ? reviews.map(r => `<p style='font-size:0.9rem; margin-bottom:8px;'><strong>${r.game}</strong>: "${r.text}" (${r.date})</p>`).join('') : "Vous n'avez pas encore laissé d'avis.";
+        }
+
+        function logout() {
+            localStorage.removeItem('ludo_session');
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
