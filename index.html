@@ -335,7 +335,7 @@
 
         try {
             // Vérification élémentaire pour savoir si l'utilisateur a personnalisé ses identifiants
-            if (typeof supabase !== 'undefined' && !SUPABASE_URL.includes("kqrecawkgulnkiuezrui")) {
+            if (typeof supabase !== 'undefined') {
                 supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 useMock = false;
                 console.log("Supabase Cloud connecté avec succès !");
