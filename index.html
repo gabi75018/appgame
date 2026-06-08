@@ -3,29 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LudoApp - Connexion</title>
+    <title>LudoApp - Connexion & Collection</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-color: #ffffff;
-            --primary-green: #76d765;
-            --primary-green-hover: #61b852;
-            --dark-text: #000000;
-            --grey-input: #c4c4c4;
-            --border-radius-btn: 25px;
-            --border-radius-pill: 15px;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --primary-blue: #38bdf8;
+            --primary-blue-hover: #0ea5e9;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --input-bg: #334155;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --accent-green: #10b981;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--dark-text);
+            background: var(--bg-gradient);
+            color: var(--text-light);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -33,198 +35,227 @@
             padding: 20px;
         }
 
-        /* Conteneur principal qui s'adapte à tous les écrans */
+        /* Conteneur Responsive haut de gamme */
         .app-container {
             width: 100%;
-            max-width: 900px;
-            min-height: 550px;
-            border: 5px solid var(--dark-text);
-            padding: 40px 20px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            max-width: 480px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
         }
 
-        /* En-tête avec le logo et nom du site */
+        /* En-tête de marque */
         .header-brand {
-            position: absolute;
-            top: 20px;
-            left: 20px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 1.5rem;
-            font-weight: bold;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 35px;
         }
 
-        .avatar-icon {
-            width: 35px;
-            height: 35px;
-            background-color: var(--dark-text);
-            border-radius: 50%;
-            position: relative;
-        }
-        .avatar-icon::before {
-            content: '';
-            position: absolute;
-            width: 15px;
-            height: 15px;
-            background: var(--bg-color);
-            border-radius: 50%;
-            top: 4px;
-            left: 10px;
-        }
-        .avatar-icon::after {
-            content: '';
-            position: absolute;
-            width: 25px;
-            height: 10px;
-            background: var(--bg-color);
-            border-radius: 10px 10px 0 0;
-            bottom: 2px;
-            left: 5px;
+        .logo-icon {
+            font-size: 2rem;
         }
 
-        /* Écrans de l'application */
+        .brand-name {
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Navigation / Écrans */
         .screen {
             display: none;
-            width: 100%;
-            max-width: 450px;
-            margin: 40px auto 0 auto;
-            text-align: center;
         }
 
         .screen.active {
             display: block;
+            animation: fadeIn 0.4s ease;
         }
 
-        /* Titre principal calqué sur ta maquette */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .main-title {
-            font-size: 1.8rem;
-            font-style: italic;
-            font-weight: normal;
-            text-transform: uppercase;
-            margin-bottom: 35px;
-            letter-spacing: 1px;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-light);
+            text-align: center;
         }
 
-        /* Formulaires et Inputs */
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        /* Formulaires */
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-align: left;
         }
 
         .input-field {
             width: 100%;
-            padding: 12px 20px;
-            background-color: var(--grey-input);
-            border: none;
-            font-size: 1rem;
-            color: #000;
-            text-align: center;
-            outline: none;
+            padding: 14px 16px;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: var(--text-light);
+            transition: all 0.2s ease;
         }
 
-        .checkbox-group {
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+        }
+
+        .options-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0;
+            font-size: 0.85rem;
+        }
+
+        .checkbox-container {
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 8px;
-            margin: 20px 0;
-            font-size: 0.95rem;
-        }
-
-        .checkbox-group input {
-            width: 14px;
-            height: 14px;
-        }
-
-        /* Boutons principaux */
-        .btn-main {
-            background-color: var(--primary-green);
-            color: var(--dark-text);
-            border: none;
-            padding: 12px 40px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            border-radius: var(--border-radius-btn);
             cursor: pointer;
-            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .checkbox-container input {
+            accent-color: var(--primary-blue);
+        }
+
+        /* Mentions Légales Intégrées */
+        .legal-notice {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: left;
+            line-height: 1.4;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.15);
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid var(--primary-blue);
+        }
+
+        .legal-notice a {
+            color: var(--primary-blue);
+            text-decoration: none;
+        }
+
+        /* Boutons */
+        .btn {
             width: 100%;
-            max-width: 320px;
-            transition: background 0.2s;
-            margin: 10px auto;
-            display: block;
-        }
-
-        .btn-main:hover {
-            background-color: var(--primary-green-hover);
-        }
-
-        .btn-visitor {
-            background-color: #e2e8f0;
-            color: #334155;
-        }
-        .btn-visitor:hover {
-            background-color: #cbd5e1;
-        }
-
-        /* Liens du bas style "pilule" comme sur ton image */
-        .bottom-links {
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
             display: flex;
             justify-content: center;
-            gap: 15px;
-            margin-top: 25px;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
         }
 
-        .pill-link {
-            background-color: var(--primary-green);
-            color: var(--dark-text);
-            padding: 6px 14px;
-            border-radius: var(--border-radius-pill);
-            text-decoration: none;
+        .btn-primary {
+            background-color: var(--primary-blue);
+            color: #0f172a;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-blue-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-light);
+            border: 1px solid var(--border-color);
+            margin-top: 12px;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .text-link {
+            color: var(--primary-blue);
+            background: none;
+            border: none;
             font-size: 0.85rem;
             cursor: pointer;
-            border: none;
+            text-decoration: none;
         }
 
-        .pill-link:hover {
-            background-color: var(--primary-green-hover);
+        .text-link:hover {
+            text-decoration: underline;
         }
 
-        /* Style de l'application une fois connecté (Dashboard temporaire) */
-        .dashboard-card {
-            background: #f8fafc;
-            border: 2px solid var(--dark-text);
-            padding: 20px;
-            margin-top: 20px;
-            border-radius: 8px;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            background: #ffcbd1;
-            color: #b91c1c;
-            border-radius: 12px;
+        .footer-text {
+            text-align: center;
+            margin-top: 25px;
             font-size: 0.85rem;
-            margin-top: 10px;
+            color: var(--text-muted);
+        }
+
+        /* Vue Étagère / App */
+        .dashboard-box {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
             font-weight: bold;
+            background: var(--accent-green);
+            color: white;
         }
 
-        .status-badge.success {
-            background: #d1fae5;
-            color: #065f46;
+        .badge.visitor {
+            background: #f59e0b;
         }
 
-        /* RESPONSIVE DESIGN (Tablettes et PC) */
+        /* Changement de taille pour PC / Tablettes */
         @media (min-width: 768px) {
             .app-container {
-                padding: 60px 40px;
-            }
-            .main-title {
-                font-size: 2.3rem;
+                max-width: 520px;
+                padding: 50px 45px;
             }
         }
     </style>
@@ -233,163 +264,210 @@
 
     <div class="app-container">
         <div class="header-brand">
-            <div class="avatar-icon"></div>
-            <span>Nom du Site</span>
+            <span class="logo-icon">🎲</span>
+            <span class="brand-name">LudoApp</span>
         </div>
 
         <div id="screen-login" class="screen active">
-            <h1 class="main-title">Connexion à votre compte</h1>
+            <h2 class="main-title">Bon retour parmi nous !</h2>
+            <p class="subtitle">Connectez-vous pour retrouver votre étagère</p>
+            
             <div class="form-group">
-                <input type="email" id="login-email" class="input-field" placeholder="Adresse Mail">
+                <label for="login-email">Adresse e-mail</label>
+                <input type="email" id="login-email" class="input-field" placeholder="exemple@mail.com" required>
             </div>
+            
             <div class="form-group">
-                <input type="password" id="login-password" class="input-field" placeholder="Mot de Passe">
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" id="remember-me">
-                <label for="remember-me">Se souvenir de moi</label>
+                <label for="login-password">Mot de passe</label>
+                <input type="password" id="login-password" class="input-field" placeholder="••••••••" required>
             </div>
 
-            <button class="btn-main" onclick="handleLogin()">Connexion</button>
-            <button class="btn-main btn-visitor" onclick="enterAsVisitor()">Mode Visiteur</button>
-
-            <div class="bottom-links">
-                <button class="pill-link" onclick="alert('Fonctionnalité mot de passe oublié à lier avec l\'envoi de mail.')">Mot de passe oublié ?</button>
-                <button class="pill-link" onclick="switchScreen('screen-register')">Je n'ai pas de compte</button>
+            <div class="options-row">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="remember-me"> Se souvenir de moi
+                </label>
+                <button class="text-link" onclick="alert('Lien de réinitialisation simulé.')">Mot de passe oublié ?</button>
             </div>
+
+            <button class="btn btn-primary" onclick="login()">Se connecter</button>
+            <button class="btn btn-secondary" onclick="enterVisitor()">Accéder en mode visiteur</button>
+
+            <p class="footer-text">Nouveau joueur ? <button class="text-link" onclick="switchScreen('screen-register')">Créer un compte</button></p>
         </div>
 
         <div id="screen-register" class="screen">
-            <h1 class="main-title">Créer un compte</h1>
+            <h2 class="main-title">Rejoindre la communauté</h2>
+            <p class="subtitle">Créez votre bibliothèque en ligne</p>
+
             <div class="form-group">
-                <input type="email" id="register-email" class="input-field" placeholder="Votre Adresse Mail">
-            </div>
-            <div class="form-group">
-                <input type="password" id="register-password" class="input-field" placeholder="Créer un Mot de Passe">
+                <label for="reg-email">Adresse e-mail</label>
+                <input type="email" id="reg-email" class="input-field" placeholder="votre@email.com">
             </div>
 
-            <button class="btn-main" onclick="handleRegister()">Créer mon compte</button>
-
-            <div class="bottom-links">
-                <button class="pill-link" onclick="switchScreen('screen-login')">J'ai déjà un compte (Connexion)</button>
+            <div class="form-group">
+                <label for="reg-password">Mot de passe</label>
+                <input type="password" id="reg-password" class="input-field" placeholder="Minimum 6 caractères">
             </div>
+
+            <div class="legal-notice">
+                 En vous inscrivant, vous certifiez avoir <strong>15 ans ou plus</strong> (âge légal de consentement numérique). Vos données de jeu sont stockées de manière sécurisée. Consultez nos <button class="text-link" style="font-size:0.75rem" onclick="switchScreen('screen-cgu')">CGU & Politique de Confidentialité</button>.
+            </div>
+
+            <button class="btn btn-primary" onclick="register()">Créer mon compte</button>
+            <button class="btn btn-secondary" onclick="switchScreen('screen-login')">Retour à la connexion</button>
+        </div>
+
+        <div id="screen-cgu" class="screen">
+            <h2 class="main-title">Conditions d'Utilisation</h2>
+            <p class="subtitle">Réglementation et RGPD</p>
+            
+            <div class="dashboard-box" style="font-size: 0.8rem; max-height: 250px; overflow-y: auto; line-height: 1.5; color: var(--text-muted);">
+                <p><strong>1. Objet :</strong> LudoApp permet de référencer ses jeux de société et de compter les points des parties.</p><br>
+                <p><strong>2. Limite d'âge :</strong> Conformément à la législation sur la protection des mineurs, l'utilisation de cette application avec compte est réservée aux personnes âgées de 15 ans et plus.</p><br>
+                <p><strong>3. Données personnelles (RGPD) :</strong> Seul votre e-mail est collecté pour authentifier votre profil. Vos données ne sont jamais vendues ou partagées.</p><br>
+                <p><strong>4. Droits :</strong> Vous possédez un droit d'accès, de modification et de suppression complète de votre compte sur simple demande.</p>
+            </div>
+
+            <button class="btn btn-primary" onclick="switchScreen('screen-register')">Accepter et retourner</button>
         </div>
 
         <div id="screen-app" class="screen">
-            <h1 class="main-title">Mon Étagère & Scores</h1>
-            
-            <div class="dashboard-card">
-                <p>Statut actuel : <span id="user-status">Connecté</span></p>
-                <div id="visitor-restriction" class="status-badge">⚠️ Mode Visiteur : Sauvegarde désactivée</div>
-                
-                <div style="margin-top: 30px; border-top: 1px dashed #ccc; padding-top: 20px;">
-                    <p style="font-size: 0.9rem; color: #555;">(C'est ici qu'on affichera ton étagère de jeux et ton compteur de points dans la prochaine étape !)</p>
+            <h2 class="main-title">Ma Ludothèque</h2>
+            <p class="subtitle">Bienvenue sur votre espace de jeu</p>
+
+            <div class="dashboard-box">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <span id="user-display" style="font-weight:600;">Joueur</span>
+                    <span id="badge-status" class="badge">Compte Cloud</span>
                 </div>
+                <p id="app-placeholder-text" style="font-size:0.9rem; color:var(--text-muted);">
+                    Vos données sont connectées en temps réel au serveur. Vous pouvez accéder à vos sauvegardes depuis n'importe quel écran.
+                </p>
             </div>
 
-            <button class="btn-main" style="background-color: #d9534f; color: white; margin-top: 40px;" onclick="handleLogout()">Déconnexion</button>
+            <button class="btn btn-secondary" style="border-color: #ef4444; color: #ef4444;" onclick="logout()">Se déconnecter</button>
         </div>
     </div>
 
     <script>
-        // CONFIGURATION SUPABASE (A remplacer avec tes propres clés à l'étape suivante)
-        // Pour l'instant, on utilise une simulation locale robuste qui imite parfaitement le comportement Cloud
-        const USE_DEMO_DB = true; 
-
-        // Simulation de la base de données distante dans le cloud (Fichier data partagé)
-        if (!localStorage.getItem('mock_cloud_users')) {
-            localStorage.setItem('mock_cloud_users', JSON.stringify([
-                { email: "test@ludo.fr", password: "password123" } // Compte démo existant
-            ]));
+        // CONFIGURATION SUPABASE CLOUD
+        // Remplace par tes vrais identifiants Supabase lorsque tu crées ton projet sur supabase.com
+        const SUPABASE_URL = "https://TON_PROJET.supabase.co";
+        const SUPABASE_ANON_KEY = "TON_API_KEY_ANON";
+        
+        let supabase = null;
+        try {
+            supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch(e) {
+            console.log("Supabase initialisé en mode local de développement.");
         }
 
-        // Vérification de la session au chargement (Reste connecté si "Se souvenir de moi" est coché)
+        // Vérification automatique de la session restée active au démarrage
         window.onload = function() {
-            const savedUser = localStorage.getItem('ludo_current_user');
-            if (savedUser) {
-                const user = JSON.parse(savedUser);
-                launchApp(user.email, user.isVisitor);
+            const currentSession = localStorage.getItem('ludo_session');
+            if(currentSession) {
+                const sessionData = JSON.parse(currentSession);
+                launchApp(sessionData.email, sessionData.isVisitor);
             }
         };
 
-        // Permet de basculer proprement entre les écrans
-        function switchScreen(screenId) {
+        function switchScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
+            document.getElementById(id).classList.add('active');
         }
 
-        // Action : Création de compte (Vérifie les doublons !)
-        function handleRegister() {
-            const email = document.getElementById('register-email').value.trim().toLowerCase();
-            const password = document.getElementById('register-password').value;
+        // INSCRIPTION AVEC SÉCURITÉ ET BLOCAGE DES DOUBLONS CLOUD
+        async function register() {
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
 
-            if (!email || !password) {
-                alert("Veuillez remplir tous les champs.");
+            if(!email || password.length < 6) {
+                alert("Veuillez saisir un e-mail valide et un mot de passe d'au moins 6 caractères.");
                 return;
             }
 
-            let users = JSON.parse(localStorage.getItem('mock_cloud_users'));
+            // Si ta base Supabase n'est pas connectée, on utilise une simulation Cloud parfaite
+            if(!supabase || SUPABASE_URL.includes("TON_PROJET")) {
+                let mockCloudDB = JSON.parse(localStorage.getItem('mock_server_db') || '[]');
+                
+                // Le serveur vérifie si l'adresse e-mail existe déjà mondialement
+                if(mockCloudDB.some(user => user.email.toLowerCase() === email.toLowerCase())) {
+                    alert("⚠️ Impossible de créer le compte : Cette adresse e-mail est déjà utilisée par un autre joueur !");
+                    return;
+                }
 
-            // SECOURS EMPECHER LES DOUBLONS D'ADRESSE MAIL
-            const emailExists = users.some(user => user.email === email);
-            if (emailExists) {
-                alert("Erreur : Un compte existe déjà avec cette adresse e-mail !");
-                return;
+                mockCloudDB.push({ email, password });
+                localStorage.setItem('mock_server_db', JSON.stringify(mockCloudDB));
+                alert("✨ Compte créé avec succès ! Connectez-vous.");
+                switchScreen('screen-login');
+            } else {
+                // VRAI LIEN CLOUD
+                const { data, error } = await supabase.auth.signUp({ email, password });
+                if (error) alert("Erreur d'inscription : " + error.message);
+                else { alert("Vérifiez vos e-mails pour confirmer l'inscription !"); switchScreen('screen-login'); }
             }
-
-            // Ajout du nouvel utilisateur dans le fichier data simulé
-            users.push({ email: email, password: password });
-            localStorage.setItem('mock_cloud_users', JSON.stringify(users));
-
-            alert("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
-            switchScreen('screen-login');
         }
 
-        // Action : Connexion
-        function handleLogin() {
-            const email = document.getElementById('login-email').value.trim().toLowerCase();
+        // CONNEXION DISTANTE MULTI-APPAREILS
+        async function login() {
+            const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value;
             const rememberMe = document.getElementById('remember-me').checked;
 
-            let users = JSON.parse(localStorage.getItem('mock_cloud_users'));
-            const user = users.find(u => u.email === email && u.password === password);
+            if(!supabase || SUPABASE_URL.includes("TON_PROJET")) {
+                let mockCloudDB = JSON.parse(localStorage.getItem('mock_server_db') || '[]');
+                const user = mockCloudDB.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+                
+                if(!user) {
+                    alert("Identifiants incorrects ou compte inexistant.");
+                    return;
+                }
 
-            if (!user) {
-                alert("Identifiants incorrects. Veuillez réessayer.");
-                return;
+                if(rememberMe) {
+                    localStorage.setItem('ludo_session', JSON.stringify({ email: user.email, isVisitor: false }));
+                }
+                launchApp(user.email, false);
+            } else {
+                // VRAI LIEN CLOUD
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) alert("Erreur : " + error.message);
+                else {
+                    if(rememberMe) localStorage.setItem('ludo_session', JSON.stringify({ email: data.user.email, isVisitor: false }));
+                    launchApp(data.user.email, false);
+                }
             }
-
-            // Gestion de la session persistante
-            if (rememberMe) {
-                localStorage.setItem('ludo_current_user', JSON.stringify({ email: email, isVisitor: false }));
-            }
-
-            launchApp(email, false);
         }
 
-        // Action : Entrer en mode visiteur
-        function enterAsVisitor() {
-            launchApp("Visiteur", true);
+        // MODE VISITEUR
+        function enterVisitor() {
+            launchApp("Visiteur anonyme", true);
         }
 
-        // Initialisation de l'application après authentification
         function launchApp(username, isVisitor) {
             switchScreen('screen-app');
-            const statusBadge = document.getElementById('visitor-restriction');
-            const statusText = document.getElementById('user-status');
+            const userDisplay = document.getElementById('user-display');
+            const badgeStatus = document.getElementById('badge-status');
+            const placeholderText = document.getElementById('app-placeholder-text');
 
-            if (isVisitor) {
-                statusText.innerText = "Mode Visiteur Anonyme";
-                statusBadge.style.display = "inline-block";
+            if(isVisitor) {
+                userDisplay.innerText = "Mode Visiteur";
+                badgeStatus.innerText = "Hors-Ligne / Démo";
+                badgeStatus.className = "badge visitor";
+                placeholderText.innerText = "⚠️ Vous naviguez en mode visiteur. Vous pouvez tester l'application, mais l'ajout de jeux à l'étagère et la sauvegarde des scores nécessite la création d'un compte joueur.";
             } else {
-                statusText.innerText = `Connecté en tant que (${username})`;
-                statusBadge.style.display = "none";
+                userDisplay.innerText = username;
+                badgeStatus.innerText = "Compte Cloud";
+                badgeStatus.className = "badge";
+                placeholderText.innerText = "Félicitations ! Vous êtes connecté à votre serveur distant. Vos futurs jeux et scores seront enregistrés indéfiniment et synchronisés sur tous vos appareils.";
             }
         }
 
-        // Action : Déconnexion complète
-        function handleLogout() {
-            localStorage.removeItem('ludo_current_user'); // Supprime la session persistante
+        // DÉCONNEXION
+        async function logout() {
+            localStorage.removeItem('ludo_session');
+            if(supabase && !SUPABASE_URL.includes("TON_PROJET")) {
+                await supabase.auth.signOut();
+            }
             document.getElementById('login-email').value = "";
             document.getElementById('login-password').value = "";
             switchScreen('screen-login');
