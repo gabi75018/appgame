@@ -1,108 +1,109 @@
-// On supprime l'ancienne variable ALL_GAMES_DATABASE qui prenait de la place
-let displayedCount = 10;
-let activeGames = [];
+// On supprime l'ancienne variable ALL_GAMES_DATABASE qui prenait de la place 
+let displayedCount = 10; 
+let activeGames = []; 
 
-window.onload = function() {
-    if(!localStorage.getItem('ludo_session')) {
-        window.location.href = "index.html";
-        return;
-    }
-    if(localStorage.getItem('theme') === 'light') {
-        document.body.classList.add('light-theme');
-    }
+window.onload = function() { 
+    if(!localStorage.getItem('ludo_session')) { 
+        window.location.href = "index.html"; 
+        return; 
+    } 
+    if(localStorage.getItem('theme') === 'light') { 
+        document.body.classList.add('light-theme'); 
+    } 
+    // On affiche une petite liste de départ par défaut 
+    searchUniversalGames("Jeux de société"); 
+}; 
+
+// ÉCOUTEUR SUR LA BARRE DE RECHERCHE (Attend que l'utilisateur s'arrête de taper) 
+let typingTimer; 
+function filterGames() { 
+    clearTimeout(typingTimer); 
+    const query = document.getElementById('search-input').value.trim(); 
     
-    // On affiche une petite liste de départ par défaut
-    searchUniversalGames("Jeux de société");
-};
+    if (query.length < 3) return; // On attend au moins 3 lettres pour chercher 
 
-// ÉCOUTEUR SUR LA BARRE DE RECHERCHE (Attend que l'utilisateur s'arrête de taper)
-let typingTimer;
-function filterGames() {
-    clearTimeout(typingTimer);
-    const query = document.getElementById('search-input').value.trim();
-    
-    if (query.length < 3) return; // On attend au moins 3 lettres pour chercher
+    // On attend 500ms après la fin de la frappe pour ne pas surcharger le réseau 
+    typingTimer = setTimeout(() => { 
+        searchUniversalGames(query); 
+    }, 500); 
+} 
 
-    // On attend 500ms après la fin de la frappe pour ne pas surcharger le réseau
-    typingTimer = setTimeout(() => {
-        searchUniversalGames(query);
-    }, 500);
-}
+// FONCTION RECHERCHE UNIVERSELLE (Appel API Open Database) 
+async function searchUniversalGames(query) { 
+    const grid = document.getElementById('games-grid'); 
+    grid.innerHTML = "<p style='text-align:center; grid-column: 1/-1;'>🔍 Recherche dans la base mondiale en cours...</p>"; 
 
-// FONCTION RECHERCHE UNIVERSELLE (Appel API Open Database)
-async function searchUniversalGames(query) {
-    const grid = document.getElementById('games-grid');
-    grid.innerHTML = "<p style='text-align:center; grid-column: 1/-1;'>🔍 Recherche dans la base mondiale en cours...</p>";
-
-    try {
-        // Utilisation de l'API Open Board Game Atlas / BGG API via un proxy gratuit
-        const response = await fetch(`https://api.geekdo.com/xmlapi2/search?type=boardgame&query=${encodeURIComponent(query)}`);
-        const textData = await response.text();
+    try { 
+        // Utilisation de l'API de Board Game Geek via leur API publique v2
+        const response = await fetch(`https://api.geekdo.com/xmlapi2/search?type=boardgame&query=${encodeURIComponent(query)}`); 
+        const textData = await response.text(); 
         
-        // Analyse du format XML retourné par la base de données des jeux
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(textData, "text/xml");
-        const items = xmlDoc.getElementsByTagName("item");
+        // Analyse du format XML retourné par la base de données des jeux 
+        const parser = new DOMParser(); 
+        const xmlDoc = parser.parseFromString(textData, "text/xml"); 
+        const items = xmlDoc.getElementsByTagName("item"); 
 
-        activeGames = [];
+        activeGames = []; 
 
-        // On prend les 30 premiers résultats maximum trouvés sur le web
-        for (let i = 0; i < Math.min(items.length, 30); i++) {
-            const id = items[i].getAttribute("id");
-            const title = items[i].getElementsByTagName("name")[0].getAttribute("value");
+        // On prend les 30 premiers résultats maximum trouvés sur le web 
+        for (let i = 0; i < Math.min(items.length, 30); i++) { 
+            const id = items[i].getAttribute("id"); 
+            const title = items[i].getElementsByTagName("name")[0].getAttribute("value"); 
             
-            // On crée l'objet du jeu à la volée
-            activeGames.push({
-                id: id,
-                title: title,
-                desc: "Jeu de société disponible sur le marché mondial. Découvrez ses règles et stratégies.",
-                // Image générique de boîte de jeu si l'API ne fournit qu'un index textuel rapide
+            // On crée l'objet du jeu à la volée 
+            activeGames.push({ 
+                id: id, 
+                title: title, 
+                desc: "Jeu de société disponible sur le marché mondial. Découvrez ses règles et stratégies.", 
                 img: "https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?w=500" 
-            });
-        }
+            }); 
+        } 
 
-        displayedCount = 10;
-        renderGames();
+        displayedCount = 10; 
+        renderGames(); 
 
-    } catch (error) {
-        console.error("Erreur de recherche:", error);
-        // Solution de secours si l'API externe est indisponible (Recherche Directe Amazon Simulée)
-        fallbackSearch(query);
-    }
-}
+    } catch (error) { 
+        console.error("Erreur de recherche:", error); 
+        // Solution de secours si l'API externe rencontre un problème
+        fallbackSearch(query); 
+    } 
+} 
 
-// SOLUTION DE SECOURS : Si le jeu est introuvable dans la base, on le crée dynamiquement pour Amazon
-function fallbackSearch(query) {
-    activeGames = [{
-        id: Date.now(),
-        title: query.charAt(0).toUpperCase() + query.slice(1),
-        desc: "Résultat dynamique généré pour votre recherche. Cliquez ci-dessous pour ouvrir directement la boutique.",
-        img: "https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?w=500"
-    }];
-    displayedCount = 10;
-    renderGames();
-}
+// SOLUTION DE SECOURS : Si le jeu est introuvable, on le crée dynamiquement pour Amazon 
+function fallbackSearch(query) { 
+    activeGames = [{ 
+        id: Date.now(), 
+        title: query.charAt(0).toUpperCase() + query.slice(1), 
+        desc: "Résultat dynamique généré pour votre recherche. Cliquez ci-dessous pour ouvrir directement la boutique.", 
+        img: "https://images.unsplash.com/photo-1610890716171-6b1bb98ffd09?w=500" 
+    }]; 
+    displayedCount = 10; 
+    renderGames(); 
+} 
 
-function renderGames() {
-    const grid = document.getElementById('games-grid');
-    grid.innerHTML = "";
-    
-    const chunk = activeGames.slice(0, displayedCount);
-    
-    if(chunk.length === 0) {
-        document.getElementById('not-found').style.display = "block";
-        document.getElementById('load-more-btn').style.display = "none";
-        return;
-    } else {
-        document.getElementById('not-found').style.display = "none";
-    }
+function renderGames() { 
+    const grid = document.getElementById('games-grid'); 
+    grid.innerHTML = ""; 
 
-    chunk.forEach(game => {
-        // LIEN DYNAMIQUE PARFAIT POUR AMAZON
-        const amazonSearchUrl = `https://www.amazon.fr/s?k=${encodeURIComponent(game.title + ' jeu')}`;
+    const chunk = activeGames.slice(0, displayedCount); 
+
+    if(chunk.length === 0) { 
+        document.getElementById('not-found').style.display = "block"; 
+        document.getElementById('load-more-btn').style.display = "none"; 
+        return; 
+    } else { 
+        document.getElementById('not-found').style.display = "none"; 
+    } 
+
+    chunk.forEach(game => { 
+        // LIEN DYNAMIQUE POUR AMAZON 
+        const amazonSearchUrl = `https://www.amazon.fr/s?k=${encodeURIComponent(game.title + ' jeu')}`; 
         
-        const card = document.createElement('div');
-        card.className = "game-card";
+        // Sécurisation du titre pour éviter les bugs avec les apostrophes dans le HTML
+        const safeTitle = game.title.replace(/'/g, "\\'");
+
+        const card = document.createElement('div'); 
+        card.className = "game-card"; 
         card.innerHTML = `
             <div>
                 <img src="${game.img}" class="game-img" alt="${game.title}">
@@ -112,22 +113,31 @@ function renderGames() {
             </div>
             <div>
                 <div class="actions-box">
-                    <button class="btn-action" onclick="saveToList('${game.title.replace(/'/g, "\\'")}', 'favoris')">⭐ Favoris</button>
-                    <button class="btn-action" onclick="saveToList('${game.title.replace(/'/g, "\\'")}', 'souhaits')">💡 Souhaits</button>
-                    <button class="btn-action" onclick="saveToList('${game.title.replace(/'/g, "\\'")}', 'etagere')">📦 Étagère</button>
+                    <button class="btn-action" onclick="saveToList('${safeTitle}', 'favoris')">⭐ Favoris</button>
+                    <button class="btn-action" onclick="saveToList('${safeTitle}', 'souhaits')">💡 Souhaits</button>
+                    <button class="btn-action" onclick="saveToList('${safeTitle}', 'etagere')">📦 Étagère</button>
                 </div>
                 <div class="rating-zone">
                     <span>Note :</span>
-                    <span class="stars" onclick="rateGame('${game.title.replace(/'/g, "\\'")}')">⭐⭐⭐⭐☆</span>
+                    <span class="stars" onclick="rateGame('${safeTitle}')">⭐⭐⭐⭐☆</span>
                 </div>
             </div>
-        `;
-        grid.appendChild(card);
-    });
+        `; 
+        grid.appendChild(card); 
+    }); 
 
-    if (displayedCount >= activeGames.length) {
-        document.getElementById('load-more-btn').style.display = "none";
-    } else {
-        document.getElementById('load-more-btn').style.display = "inline-block";
+    // CORRECTION ICI : Retrait du ".style.style" en trop
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    if (loadMoreBtn) {
+        if (displayedCount >= activeGames.length) { 
+            loadMoreBtn.style.display = "none"; 
+        } else { 
+            loadMoreBtn.style.display = "inline-block"; 
+        } 
     }
+}
+
+function loadMoreGames() {
+    displayedCount += 10;
+    renderGames();
 }
