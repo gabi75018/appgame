@@ -442,27 +442,17 @@
             launchApp("Visiteur anonyme", true);
         }
 
-        function launchApp(username, isVisitor) {
-            switchScreen('screen-app');
-            const userDisplay = document.getElementById('user-display');
-            const badgeStatus = document.getElementById('badge-status');
-            const placeholderText = document.getElementById('app-placeholder-text');
 
-            if(isVisitor) {
-                userDisplay.innerText = "Mode Visiteur";
-                badgeStatus.innerText = "Hors-Ligne / Démo";
-                badgeStatus.className = "badge visitor";
-                placeholderText.innerText = "⚠️ Vous naviguez en mode visiteur. Vous pouvez tester l'application, mais l'ajout de jeux à l'étagère et la sauvegarde des scores nécessite la création d'un compte joueur.";
-            } else {
-                userDisplay.innerText = username;
-                badgeStatus.innerText = useMock ? "Compte Simulé (Local)" : "Compte Cloud (Supabase)";
-                badgeStatus.className = "badge";
-                placeholderText.innerText = useMock 
-                    ? "Félicitations ! Vous êtes connecté au serveur virtuel local. Vos données de jeu seront conservées dans le cache de votre navigateur actuel."
-                    : "Félicitations ! Vous êtes connecté à votre serveur distant Supabase. Vos futurs jeux et scores seront synchronisés sur tous vos appareils.";
-            }
+        function launchApp(username, isVisitor) {
+    // On enregistre les données de session pour que la page accueil.html puisse les lire
+            const sessionData = { email: username, isVisitor: isVisitor };
+            localStorage.setItem('ludo_session', JSON.stringify(sessionData));
+
+    // Redirection vers la nouvelle page accueil.html
+            window.location.href = "accueil.html";
         }
 
+        
         // DÉCONNEXION
         async function logout() {
             localStorage.removeItem('ludo_session');
