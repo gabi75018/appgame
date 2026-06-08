@@ -3,32 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LudoApp - Compteur de points</title>
+    <title>LudoApp - Compteur & Arbitrage</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc;
-            --primary: #38bdf8; --border: rgba(255, 255, 255, 0.1);
+            --primary: #38bdf8; --border: rgba(255, 255, 255, 0.1); --text-muted: #94a3b8;
+            --accent-green: #10b981; --accent-red: #ef4444;
         }
         body.light-theme {
-            --bg-color: #f1f5f9; --card-bg: #ffffff; --text-main: #0f172a; --border: rgba(0, 0, 0, 0.1);
+            --bg-color: #f1f5f9; --card-bg: #ffffff; --text-main: #0f172a; 
+            --border: rgba(0, 0, 0, 0.1); --text-muted: #64748b;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; }
+        body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; padding-bottom: 50px; }
         
         nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 5%; background-color: var(--card-bg); border-bottom: 1px solid var(--border); }
         .brand { font-size: 1.5rem; font-weight: 700; color: var(--primary); text-decoration: none; }
         .nav-links { display: flex; gap: 20px; list-style: none; }
         .nav-links a { color: var(--text-main); text-decoration: none; font-weight: 600; }
-        .nav-links a:hover, .nav-links a.active { color: var(--primary); }
+        .nav-links a.active { color: var(--primary); }
 
-        .main-container { max-width: 600px; margin: 40px auto; padding: 0 20px; }
-        .score-card { background: var(--card-bg); padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .main-container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
+        .box { background: var(--card-bg); padding: 25px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 25px; }
         
-        .btn { padding: 10px 20px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
+        /* Modes de comptage */
+        .mode-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .mode-btn { padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: var(--text-main); cursor: pointer; font-size: 0.8rem; font-weight: 600; }
+        .mode-btn.active { border-color: var(--primary); background: rgba(56, 189, 248, 0.1); color: var(--primary); }
+
+        /* Joueurs */
+        .player-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); }
+        .score-display { font-size: 1.8rem; font-weight: 800; color: var(--primary); min-width: 60px; text-align: center; }
+        
+        .controls { display: flex; gap: 5px; }
+        .btn-calc { width: 40px; height: 40px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; background: #334155; color: white; }
+        .btn-calc:hover { background: #475569; }
+
+        .btn-main { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; margin-top: 10px; }
         .btn-primary { background-color: var(--primary); color: #0f172a; }
-        .btn-calc { padding: 6px 12px; background: #334155; color: white; border-radius: 6px; border: none; font-size: 0.9rem; cursor: pointer; margin-left: 5px;}
-        .player-name { font-size: 1.2rem; font-weight: 600; }
-        .score-val { font-size: 1.8rem; font-weight: 700; color: var(--primary); }
+        .btn-success { background-color: var(--accent-green); color: white; }
+
+        /* Historique */
+        .history-item { padding: 15px; border-bottom: 1px solid var(--border); cursor: pointer; display: flex; justify-content: space-between; transition: background 0.2s; }
+        .history-item:hover { background: rgba(255,255,255,0.05); }
+        
+        /* Modal Récapitulatif */
+        #modal-recap { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: var(--card-bg); padding: 30px; border-radius: 20px; width: 100%; max-width: 500px; position: relative; }
+
+        @media (max-width: 600px) {
+            .player-row { flex-direction: column; gap: 10px; text-align: center; }
+        }
     </style>
 </head>
 <body>
@@ -38,31 +64,82 @@
         <ul class="nav-links">
             <li><a href="accueil.html">Accueil</a></li>
             <li><a href="compteur.html" class="active">Compteur</a></li>
-            <li><a href="profil.html">Mon Profil</a></li>
+            <li><a href="profil.html">Mon Compte</a></li>
             <li><a href="legal.html">Infos Légales</a></li>
         </ul>
     </nav>
 
     <div class="main-container">
-        <h2 style="margin-bottom: 20px;">Calculateur de Scores</h2>
-        <button class="btn btn-primary" style="margin-bottom: 20px; width: 100%;" onclick="addPlayer()">➕ Ajouter un joueur</button>
-        
-        <div id="players-list"></div>
+        <div class="box">
+            <h3 style="margin-bottom: 15px;">Partie en cours</h3>
+            
+            <div class="mode-selector">
+                <button class="mode-btn active" id="mode-prog" onclick="setMode('progressif')">📈 Progressif<br>(0 → Max)</button>
+                <button class="mode-btn" id="mode-degr" onclick="setMode('degressif')">📉 Dégressif<br>(Max → 0)</button>
+                <button class="mode-btn" id="mode-round" onclick="setMode('manches')">🔢 Par Manches<br>(Input +/-)</button>
+            </div>
 
-        <button class="btn" style="background-color: #10b981; color: white; width: 100%; margin-top: 20px;" onclick="saveGame()">💾 Enregistrer la fin de partie</button>
+            <div id="setup-area" style="margin-bottom: 15px; display: none;">
+                <label style="font-size: 0.8rem; color: var(--text-muted);">Points de départ :</label>
+                <input type="number" id="start-points" value="301" style="width: 80px; padding: 5px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg-color); color: white;">
+            </div>
+
+            <div id="players-list">
+                </div>
+
+            <button class="btn-main btn-primary" onclick="addPlayer()">👤 Ajouter un joueur</button>
+            <button class="btn-main btn-success" onclick="saveCurrentGame()">💾 Enregistrer et terminer la partie</button>
+            <button class="btn-main" style="background: transparent; color: var(--accent-red); border: 1px solid var(--accent-red);" onclick="resetAll()">🔄 Nouvelle partie (Reset)</button>
+        </div>
+
+        <div class="box">
+            <h3 style="margin-bottom: 15px;">Historique des parties</h3>
+            <div id="history-list">
+                <p style="text-align: center; color: var(--text-muted); padding: 20px;">Aucune partie enregistrée.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-recap">
+        <div class="modal-content">
+            <h2 id="recap-title" style="margin-bottom: 10px; color: var(--primary);">Résultats</h2>
+            <p id="recap-date" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;"></p>
+            <div id="recap-details"></div>
+            <button class="btn-main btn-primary" onclick="closeModal()">Fermer</button>
+        </div>
     </div>
 
     <script>
+        let currentMode = 'progressif';
         let players = [];
 
         window.onload = function() {
+            if(!localStorage.getItem('ludo_session')) { window.location.href = "index.html"; return; }
             if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
+            renderHistory();
         };
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`mode-${mode.substring(0,4)}`).classList.add('active');
+            
+            // Afficher le champ "Points de départ" si dégressif
+            document.getElementById('setup-area').style.display = (mode === 'degressif') ? 'block' : 'none';
+            
+            if(players.length > 0) {
+                if(confirm("Changer de mode réinitialisera les scores. Continuer ?")) {
+                    resetScores();
+                }
+            }
+        }
 
         function addPlayer() {
             const name = prompt("Nom du joueur :");
-            if(name) {
-                players.push({ name: name, score: 0 });
+            if(name && name.trim() !== "") {
+                let initialScore = 0;
+                if(currentMode === 'degressif') initialScore = parseInt(document.getElementById('start-points').value) || 0;
+                players.push({ name: name.trim(), score: initialScore });
                 renderPlayers();
             }
         }
@@ -70,35 +147,123 @@
         function renderPlayers() {
             const list = document.getElementById('players-list');
             list.innerHTML = "";
-            players.forEach((player, idx) => {
-                const card = document.createElement('div');
-                card.className = "score-card";
-                card.innerHTML = `
-                    <div class="player-name">${player.name}</div>
-                    <div style="display:flex; align-items:center; gap: 15px;">
-                        <button class="btn-calc" onclick="updateScore(${idx}, -1)">-1</button>
-                        <span class="score-val">${player.score}</span>
-                        <button class="btn-calc" onclick="updateScore(${idx}, 1)">+1</button>
-                        <button class="btn-calc" style="background-color:var(--primary); color:#000;" onclick="updateScore(${idx}, 5)">+5</button>
+            players.forEach((p, index) => {
+                const row = document.createElement('div');
+                row.className = "player-row";
+                
+                let controlsHTML = '';
+                if(currentMode === 'manches') {
+                    controlsHTML = `
+                        <input type="number" id="input-${index}" placeholder="Manche" style="width:70px; padding:8px; border-radius:8px; border:none; margin-right:5px;">
+                        <button class="btn-calc" style="background:var(--accent-green)" onclick="addValue(${index})">OK</button>
+                    `;
+                } else {
+                    controlsHTML = `
+                        <button class="btn-calc" onclick="updateScore(${index}, -1)">-1</button>
+                        <button class="btn-calc" onclick="updateScore(${index}, 1)">+1</button>
+                        <button class="btn-calc" style="background:var(--primary); color:#000" onclick="updateScore(${index}, 10)">+10</button>
+                    `;
+                }
+
+                row.innerHTML = `
+                    <div style="text-align:left">
+                        <div style="font-weight:700">${p.name}</div>
+                        <div style="font-size:0.7rem; color:var(--text-muted)">Rang: #${index + 1}</div>
                     </div>
+                    <div class="score-display">${p.score}</div>
+                    <div class="controls">${controlsHTML}</div>
                 `;
-                list.appendChild(card);
+                list.appendChild(row);
             });
         }
 
-        function updateScore(idx, value) {
-            players[idx].score += value;
+        function updateScore(index, val) {
+            players[index].score += val;
             renderPlayers();
         }
 
-        function saveGame() {
+        function addValue(index) {
+            const input = document.getElementById(`input-${index}`);
+            const val = parseInt(input.value) || 0;
+            players[index].score += val;
+            input.value = "";
+            renderPlayers();
+        }
+
+        function resetScores() {
+            let startVal = (currentMode === 'degressif') ? (parseInt(document.getElementById('start-points').value) || 0) : 0;
+            players.forEach(p => p.score = startVal);
+            renderPlayers();
+        }
+
+        function resetAll() {
+            if(confirm("Tout effacer et recommencer ?")) {
+                players = [];
+                renderPlayers();
+            }
+        }
+
+        // SAUVEGARDE ET HISTORIQUE
+        function saveCurrentGame() {
             if(players.length === 0) return;
-            let history = JSON.parse(localStorage.getItem('games_history') || '[]');
-            history.push({ date: new Date().toLocaleDateString(), results: [...players] });
-            localStorage.setItem('games_history', JSON.stringify(history));
-            alert("Partie sauvegardée avec succès !");
+            
+            const gameData = {
+                id: Date.now(),
+                date: new Date().toLocaleString('fr-FR'),
+                mode: currentMode,
+                results: [...players].sort((a,b) => b.score - a.score)
+            };
+
+            let history = JSON.parse(localStorage.getItem('ludo_history') || '[]');
+            history.unshift(gameData); // On ajoute au début
+            localStorage.setItem('ludo_history', JSON.stringify(history));
+
+            alert("Partie enregistrée dans l'historique !");
             players = [];
             renderPlayers();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            const history = JSON.parse(localStorage.getItem('ludo_history') || '[]');
+            
+            if(history.length === 0) return;
+
+            list.innerHTML = "";
+            history.forEach(game => {
+                const winner = game.results[0].name;
+                const item = document.createElement('div');
+                item.className = "history-item";
+                item.onclick = () => showRecap(game);
+                item.innerHTML = `
+                    <div>
+                        <div style="font-weight:600">🏆 Vainqueur : ${winner}</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted)">${game.date} - Mode ${game.mode}</div>
+                    </div>
+                    <div style="color:var(--primary)">Détails ></div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function showRecap(game) {
+            document.getElementById('recap-title').innerText = "Fin de partie (" + game.mode + ")";
+            document.getElementById('recap-date').innerText = game.date;
+            
+            const details = document.getElementById('recap-details');
+            details.innerHTML = game.results.map((p, i) => `
+                <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border)">
+                    <span>${i+1}. ${p.name}</span>
+                    <span style="font-weight:700; color:var(--primary)">${p.score} pts</span>
+                </div>
+            `).join('');
+
+            document.getElementById('modal-recap').style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById('modal-recap').style.display = "none";
         }
     </script>
 </body>
